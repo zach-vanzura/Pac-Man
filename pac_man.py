@@ -1,16 +1,8 @@
-"""
-Drawing an example happy face
-
-If Python and Arcade are installed, this example can be run from the command line with:
-python -m arcade.examples.happy_face
-"""
-
 import arcade
 
 # Set constants for the screen size
 WINDOW_WIDTH = 600
 WINDOW_HEIGHT = 600
-WINDOW_TITLE = "Happy Face Example"
 
 # Open the window. Set the window title and dimensions
 arcade.open_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, resizable=True)
@@ -20,8 +12,6 @@ arcade.set_background_color(arcade.color.WHITE)
 
 # Clear screen and start render process
 arcade.start_render()
-
-# --- Drawing Commands Will Go Here ---
 
 # Draw the face
 x = 300
