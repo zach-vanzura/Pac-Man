@@ -9,7 +9,6 @@ Group Members:
     Alexa Witkin
 """
 
-
 """
 Based on Starting Template Using Window Class in the PyArcade Docs
 Additionally, added components from Better Move By Keyboard
@@ -25,6 +24,7 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 """
 
 import arcade
+from Controllable import Controllable
 
 """
 Pac-Man and other arcade games use a 5:4 window ratio
@@ -51,30 +51,6 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
-class Player(arcade.Sprite):
-    
-    def update(self, delta_time: float = 1/60):
-        """ Move the Player Sprite """
-        # Move player
-        # Remove these lines if physics engine is moving player
-        self.center_x += self.change_x
-        self.center_y += self.change_y
-
-        # check if out-of-bounds
-        # TODO: make it so the player sprite loops around the screen
-        # i.e. player moves past the right side of window, pops up at same 
-        # y coordinate on left side of window
-        # similar for top/bottom
-        if self.left < 0:
-            self.left = 0
-        elif self.right > WINDOW_WIDTH - 1:
-            self.right = WINDOW_WIDTH - 1
-
-        if self.bottom < 0:
-            self.bottom = 0
-        elif self.top > WINDOW_HEIGHT - 1:
-            self.top = WINDOW_HEIGHT - 1
-
 
 class GameView(arcade.View):
     """
@@ -85,8 +61,6 @@ class GameView(arcade.View):
     with your own code. Don't leave 'pass' in this program.
     """
 
-
-
     def __init__(self):
         """ Initializer """
 
@@ -94,7 +68,7 @@ class GameView(arcade.View):
         super().__init__()
 
         # Variables that will hold sprite lists
-        self.player_list = None
+        self.controllable_list = None
 
         # Set up the player info
         self.player_sprite = None
@@ -104,26 +78,27 @@ class GameView(arcade.View):
         self.right_pressed = False
         self.up_pressed = False
         self.down_pressed = False
+        self.esc_pressed = False
 
         # Set background color
         self.background_color = arcade.color.BLACK
 
         # If you have sprite lists, you should create them here,
         # and set them to None
-    
 
 
     def setup(self):
         """ Set up the game and initialize the variables """
 
         # Sprite lists
-        self.player_list = arcade.SpriteList()
+        self.controllable_list = arcade.SpriteList()
 
         # Set up the player
-        self.player_sprite = Player("images/pacman-static.png", scale=SPRITE_SCALING)
+        self.player_sprite = Controllable("images/pacman-static.png",
+                                          SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.player_sprite.center_x = WINDOW_WIDTH / 2
-        self.player_sprite.center_y = (WINDOW_HEIGHT / 2) - 200
-        self.player_list.append(self.player_sprite)
+        self.player_sprite.center_y = (WINDOW_HEIGHT / 2)
+        self.controllable_list.append(self.player_sprite)
     
 
 
@@ -135,7 +110,7 @@ class GameView(arcade.View):
         self.clear()
 
         # Call draw() on all your sprite lists below
-        self.player_list.draw()
+        self.controllable_list.draw()
     
 
 
@@ -161,7 +136,7 @@ class GameView(arcade.View):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
-        self.player_list.update(delta_time)
+        self.controllable_list.update(delta_time)
     
 
 
@@ -184,6 +159,8 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = True
             self.update_player_speed()
+        elif key == arcade.key.ESCAPE:
+            self.esc_pressed = True
 
 
 
@@ -203,7 +180,8 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = False
             self.update_player_speed()
-
+        elif key == arcade.key.ESCAPE:
+            self.esc_pressed = False
 
 
     def reset(self):
@@ -211,7 +189,6 @@ class GameView(arcade.View):
         # Do changes needed to restart the game here if you want to support that
         pass
 
-    
     def on_mouse_motion(self, x, y, delta_x, delta_y):
         """
         Called whenever the mouse moves.
