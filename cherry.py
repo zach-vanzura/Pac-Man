@@ -52,11 +52,15 @@ x = 280
 y = 350
 LIGHT_COLOR = arcade.color.WHITE
 arcade.draw_ellipse_filled(x, y, 25, 10, LIGHT_COLOR, 145, -1)
+arcade.draw_ellipse_outline(x, y, width, height, arcade.color.BLACK, 1, 145)
+
 
 # Draw the light on the right cherry
 x = 345
 y = 320
 arcade.draw_ellipse_filled(x, y, 25, 10, LIGHT_COLOR, 130, -1)
+arcade.draw_ellipse_outline(x, y, width, height, arcade.color.BLACK, 1, 130)
+
 
 # Finish drawing and display the result
 arcade.finish_render()
