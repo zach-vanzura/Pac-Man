@@ -14,7 +14,7 @@ arcade.set_background_color(arcade.color.WHITE)
 # Clear screen and start render process
 arcade.start_render()
 
-# Draw the melon 
+# Draw the orange 
 x = 300
 y = 300
 width = 150
