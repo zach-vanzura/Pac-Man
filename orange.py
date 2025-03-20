@@ -3,7 +3,7 @@ import arcade
 # Set constants for the screen size
 WINDOW_WIDTH = 600
 WINDOW_HEIGHT = 600
-WINDOW_TITLE = "Melon"
+WINDOW_TITLE = "Orange"
 
 # Open the window. Set the window title and dimensions
 arcade.open_window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, resizable=True)
@@ -19,8 +19,8 @@ x = 300
 y = 300
 width = 150
 height = 160
-MELON_COLOR = arcade.color.INDIAN_YELLOW # or deep lemon
-arcade.draw_ellipse_filled(x, y, width, height, MELON_COLOR, 90, -1)
+ORANGE_COLOR = arcade.color.INDIAN_YELLOW # or deep lemon
+arcade.draw_ellipse_filled(x, y, width, height, ORANGE_COLOR, 90, -1)
 arcade.draw_ellipse_outline(x, y, width, height, arcade.color.BLACK, 1, 90)
 
 # Draw the bottom half of the leaves
