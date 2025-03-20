@@ -9,18 +9,21 @@ Group Members:
     Alexa Witkin
 """
 
-
-import arcade
-
 """
+Notes:
 Pac-Man uses a 5:4 window ratio
 pixel width = pixel height * 1.25
 for now, 900px = 720px * 1.25
 """
 
+import arcade
+
+
 # Set scale of sprites
 SPRITE_SCALING = 0.025
 GHOST_SCALING = 0.075
+
+GHOST_COUNT = 4
 
 # Set window height and width in 5:4 ratio
 WINDOW_WIDTH = 900
@@ -30,9 +33,8 @@ WINDOW_HEIGHT = 720
 WINDOW_TITLE = "PAC-MAN"
 
 # Set player movement speed
-MOVEMENT_SPEED = 5
-
-
+PACMAN_SPEED = 5
+GHOST_SPEED = 2
 
 
 class Controllable(arcade.Sprite):
@@ -43,7 +45,6 @@ class Controllable(arcade.Sprite):
         self.center_y = window_height / 2
         self.window_width, self.window_height = window_width, window_height
         self.is_edible = False
-
 
 
     def update(self, delta_time: float = 1 / 60):
@@ -66,16 +67,22 @@ class Controllable(arcade.Sprite):
 
 
 class Ghost(Controllable):
-    def __init__(self, path_to_sprite, scale, window_width, window_height):
+    def __init__(self, path_to_sprite, scale, window_width, window_height, player_sprite):
         super().__init__(path_to_sprite, scale, window_width, window_height)
         self.is_edible = False
+        self.player_sprite = player_sprite
 
     def update(self, delta_time: float = 1 / 60):
         """ Move the Ghost Sprite """
-        # Example: Random movement logic (can be replaced with AI logic)
-        import random
-        self.change_x = random.choice([-1, 0, 1]) * MOVEMENT_SPEED
-        self.change_y = random.choice([-1, 0, 1]) * MOVEMENT_SPEED
+        if self.center_y < self.player_sprite.center_y:
+            self.center_y += min(GHOST_SPEED, self.player_sprite.center_y - self.center_y)
+        elif self.center_y > self.player_sprite.center_y:
+            self.center_y -= min(GHOST_SPEED, self.center_y - self.player_sprite.center_y)
+
+        if self.center_x < self.player_sprite.center_x:
+            self.center_x += min(GHOST_SPEED, self.player_sprite.center_x - self.center_x)
+        elif self.center_x > self.player_sprite.center_x:
+            self.center_x -= min(GHOST_SPEED, self.center_x - self.player_sprite.center_x)
 
         # Call the parent update method to handle screen wrapping
         super().update(delta_time)
@@ -112,6 +119,7 @@ class GameView(arcade.View):
         # Set background color
         self.background_color = arcade.color.BLACK
 
+
     def setup(self):
         """ Set up the game and initialize the variables """
 
@@ -135,12 +143,14 @@ class GameView(arcade.View):
         ]
 
         # Set up the ghosts
-        for i in range(4):  # Create 4 ghosts
+        for i in range(4):
             ghost_sprite = Ghost(ghost_images[i], scale=GHOST_SCALING, 
-                                 window_width=WINDOW_WIDTH, window_height=WINDOW_HEIGHT)
+                                    window_width=WINDOW_WIDTH, window_height=WINDOW_HEIGHT,
+                                    player_sprite=self.player_sprite)
             ghost_sprite.center_x = WINDOW_WIDTH / 2 + (i * 50) - 75  # Spread ghosts horizontally
             ghost_sprite.center_y = (WINDOW_HEIGHT / 2) + 200
             self.ghost_list.append(ghost_sprite)
+
 
     def on_draw(self):
         """ Render the screen """
@@ -148,24 +158,27 @@ class GameView(arcade.View):
         self.player_list.draw()
         self.ghost_list.draw()
 
+
     def update_player_speed(self):
         """ Calculate speed based on the keys pressed """
         self.player_sprite.change_x = 0
         self.player_sprite.change_y = 0
 
         if self.up_pressed and not self.down_pressed:
-            self.player_sprite.change_y = MOVEMENT_SPEED
+            self.player_sprite.change_y = PACMAN_SPEED
         elif self.down_pressed and not self.up_pressed:
-            self.player_sprite.change_y = -MOVEMENT_SPEED
+            self.player_sprite.change_y = -PACMAN_SPEED
         if self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x = -MOVEMENT_SPEED
+            self.player_sprite.change_x = -PACMAN_SPEED
         elif self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x = MOVEMENT_SPEED
+            self.player_sprite.change_x = PACMAN_SPEED
+
 
     def on_update(self, delta_time):
         """ All the logic to move, and the game logic goes here """
         self.player_list.update(delta_time)
         self.ghost_list.update(delta_time)
+
 
     def on_key_press(self, key, key_modifiers):
         """ Called whenever a key on the keyboard is pressed """
@@ -178,6 +191,7 @@ class GameView(arcade.View):
         elif key == arcade.key.RIGHT:
             self.right_pressed = True
         self.update_player_speed()
+
 
     def on_key_release(self, key, key_modifiers):
         """ Called whenever the user lets off a previously pressed key """
