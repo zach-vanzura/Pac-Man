@@ -74,6 +74,7 @@ class GameView(arcade.View):
         # Variables that will hold sprite lists
         self.controllable_list = None
         self.consumable_list = None
+        self.to_be_eaten = None
 
         # Set up the player info
         self.player_sprite = None
@@ -107,7 +108,7 @@ class GameView(arcade.View):
         self.player_sprite.center_y = (WINDOW_HEIGHT / 2)
         self.controllable_list.append(self.player_sprite)
 
-        for i in range(1, 245):  # 244 is number pellets, 4 of them are energizer pellets
+        for i in range(1, 245):  # 244 is number pellets, 4 of them are energizer pellets, this isn't accounted for yet
             self.pellet_sprite = Consumable("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
             self.pellet_sprite.center_x = random.randint(1, WINDOW_WIDTH)
             self.pellet_sprite.center_y = random.randint(1, WINDOW_HEIGHT)
@@ -152,6 +153,7 @@ class GameView(arcade.View):
         need it.
         """
         self.controllable_list.update(delta_time)
+        # find all sprites tha will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
             sprite.set_eaten()
@@ -168,6 +170,7 @@ class GameView(arcade.View):
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
+        # TODO: change the direction pacman is facing based on key press
         if key == arcade.key.UP:
             self.up_pressed = True
             self.update_player_speed()
