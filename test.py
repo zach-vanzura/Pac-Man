@@ -1,3 +1,9 @@
+import random
+
+import arcade
+from controllable import Controllable
+from consumable import Consumable
+
 """
 CS3050: Software Engineering
 Final Project -> Pac-Man inspired game
@@ -23,8 +29,6 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 - Ashton
 """
 
-import arcade
-from Controllable import Controllable
 
 """
 Pac-Man and other arcade games use a 5:4 window ratio
@@ -69,9 +73,11 @@ class GameView(arcade.View):
 
         # Variables that will hold sprite lists
         self.controllable_list = None
+        self.consumable_list = None
 
         # Set up the player info
         self.player_sprite = None
+        self.pellet_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -92,6 +98,7 @@ class GameView(arcade.View):
 
         # Sprite lists
         self.controllable_list = arcade.SpriteList()
+        self.consumable_list = arcade.SpriteList()
 
         # Set up the player
         self.player_sprite = Controllable("images/pacman-static.png",
@@ -99,7 +106,14 @@ class GameView(arcade.View):
         self.player_sprite.center_x = WINDOW_WIDTH / 2
         self.player_sprite.center_y = (WINDOW_HEIGHT / 2)
         self.controllable_list.append(self.player_sprite)
-    
+
+        for i in range(1, 245):  # 244 is number pellets, 4 of them are energizer pellets
+            self.pellet_sprite = Consumable("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+            self.pellet_sprite.center_x = random.randint(1, WINDOW_WIDTH)
+            self.pellet_sprite.center_y = random.randint(1, WINDOW_HEIGHT)
+            self.consumable_list.append(self.pellet_sprite)
+
+
 
 
     def on_draw(self):
@@ -111,6 +125,7 @@ class GameView(arcade.View):
 
         # Call draw() on all your sprite lists below
         self.controllable_list.draw()
+        self.consumable_list.draw()
     
 
 
@@ -137,6 +152,12 @@ class GameView(arcade.View):
         need it.
         """
         self.controllable_list.update(delta_time)
+        self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
+        for sprite in self.to_be_eaten:
+            sprite.set_eaten()
+        for sprite in self.consumable_list:
+            sprite.update()
+
     
 
 
