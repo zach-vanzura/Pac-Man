@@ -24,6 +24,7 @@ class Controllable(arcade.Sprite):
         self.center_y = window_height / 2
         self.window_width, self.window_height = window_width, window_height
         self.is_edible = False
+        self.score = 0
 
 
 
