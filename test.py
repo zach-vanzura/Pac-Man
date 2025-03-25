@@ -55,6 +55,8 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
+TILE_SIZE = 32
+
 
 class GameView(arcade.View):
     """
@@ -93,42 +95,179 @@ class GameView(arcade.View):
         # If you have sprite lists, you should create them here,
         # and set them to None
 
-
     def setup(self):
-        """ Set up the game and initialize the variables """
-
-        # Sprite lists
         self.controllable_list = arcade.SpriteList()
         self.consumable_list = arcade.SpriteList()
+        self.wall_list = arcade.SpriteList()
 
-        # Set up the player
+        # Set up Pac-Man
         self.player_sprite = Controllable("images/pacman-static.png",
-                                          SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.player_sprite.center_x = WINDOW_WIDTH / 2
-        self.player_sprite.center_y = (WINDOW_HEIGHT / 2)
+                                           SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.player_sprite.center_x = 15
+        self.player_sprite.center_y = 700
         self.controllable_list.append(self.player_sprite)
 
-        for i in range(1, 245):  # 244 is number pellets, 4 of them are energizer pellets, this isn't accounted for yet
-            self.pellet_sprite = Consumable("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-            self.pellet_sprite.center_x = random.randint(1, WINDOW_WIDTH)
-            self.pellet_sprite.center_y = random.randint(1, WINDOW_HEIGHT)
-            self.consumable_list.append(self.pellet_sprite)
+        # Pellet Map
+        # - # is where you don't want pellet to be
+        # - . is where you want pellet to be
+        pellet_map = [
+            "####..........#.........",
+            "####.###.####.#.####.##.",
+            "####.###.####.#.####.##.",
+            "####....................",
+            "####.###............###.",
+            "####....................",
+            "########.#..........####",
+            "########.#..........####",
+            "########.#..........####",
+            "########.#..........####",
+            "########.#.######.#.####",
+            "####....................",
+            "####.###................",
+            "####.###................",
+            "####.###......#.........",
+            "####.###......#.........",
+            "####..........#.........",
+            "########################",
+        ]
 
+        offset_x = TILE_SIZE // 2
+        offset_y = TILE_SIZE // 2
 
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
+                if tile == ".":
+                    pellet = Consumable("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    pellet.center_x = x
+                    pellet.center_y = y
+                    self.consumable_list.append(pellet)
 
     def on_draw(self):
-        """ Render the screen """
-
-        # This command should happen before we start drawing. It will clear
-        # the screen to the background color, and erase what we drew last frame.
         self.clear()
 
-        # Call draw() on all your sprite lists below
+        # margin between border = 15
+        # margin between path = 50, 45
+
+
+        # BORDER GOING AROUND THE GAME
+        # Top border (top line)
+        arcade.draw_line(100, 600, 797, 600, arcade.color.BLUE, 4)
+        # Top border (bottom line, first half)
+        arcade.draw_line(115, 585, 455, 585, arcade.color.BLUE, 4)
+        # Top border (bottom line, second half)
+        arcade.draw_line(470, 585, 782, 585, arcade.color.BLUE, 4)
+        # Bottom border (bottom line)
+        arcade.draw_line(100, 5, 797, 5, arcade.color.BLUE, 4)
+        # Bottom border (top line, first half)
+        arcade.draw_line(115, 20, 455, 20, arcade.color.BLUE, 4)
+        # Bottom border (top line, second half)
+        arcade.draw_line(474, 20, 782, 20, arcade.color.BLUE, 4)
+
+        # Rectangle midway through border (left line)
+        arcade.draw_line(457, 487, 457, 587, arcade.color.BLUE, 4)
+        # Rectangle midway through border (bottom line)
+        arcade.draw_line(455, 485, 474, 485, arcade.color.BLUE, 4)
+        # Rectangle midway through border (right line)
+        arcade.draw_line(472, 485, 472, 587, arcade.color.BLUE, 4)
+
+        # Rectangle midway through border, mirrored to bottom
+        arcade.draw_line(457, 118, 457, 18, arcade.color.BLUE, 4)
+        arcade.draw_line(455, 116, 474, 116, arcade.color.BLUE, 4)
+        arcade.draw_line(472, 118, 472, 18, arcade.color.BLUE, 4)
+
+
+        # Left border (left line)
+        arcade.draw_line(100, 602, 100, 360, arcade.color.BLUE, 4)
+        # Left border (right line)
+        arcade.draw_line(115, 587, 115, 375, arcade.color.BLUE, 4)
+        # Right border (right line)
+        arcade.draw_line(795, 602, 795, 356, arcade.color.BLUE, 4)
+        # Right border (left line)
+        arcade.draw_line(780, 587, 780, 371, arcade.color.BLUE, 4)
+
+        # Left border - divit halfway through one side, top (top line)
+        arcade.draw_line(113, 373, 250, 373, arcade.color.BLUE, 4)
+        # Left border - divit halfway through one side, top (bottom line)
+        arcade.draw_line(98, 358, 235, 358, arcade.color.BLUE, 4)
+        # Left border - divit halfway through one side (vertical line, right)
+        arcade.draw_line(250, 326, 250, 375, arcade.color.BLUE, 4)
+        # Left border - divit halfway through one side (vertical line, left)
+        arcade.draw_line(235, 340, 235, 360, arcade.color.BLUE, 4)
+        # Left border - divit halfway through one side, bottom (top line)
+        arcade.draw_line(98, 342, 237, 342, arcade.color.BLUE, 4)
+        # Left border - divit halfway through one side, bottom (bottom line)
+        arcade.draw_line(98, 327, 252, 327, arcade.color.BLUE, 4)
+
+        # Left border, bottom - divit halfway through one side, top (top line)
+        arcade.draw_line(98, 277, 250, 277, arcade.color.BLUE, 4)
+        # Left border, bottom - divit halfway through one side, top (bottom line)
+        arcade.draw_line(98, 262, 235, 262, arcade.color.BLUE, 4)
+        # Left border, bottom - divit halfway through one side (vertical line, right)
+        arcade.draw_line(250, 230, 250, 279, arcade.color.BLUE, 4)
+        # Left border, bottom - divit halfway through one side (vertical line, left)
+        arcade.draw_line(235, 244, 235, 264, arcade.color.BLUE, 4)
+        # Left border, bottom - divit halfway through one side, bottom (top line)
+        arcade.draw_line(98, 244, 237, 244, arcade.color.BLUE, 4)
+        # Left border, bottom - divit halfway through one side, bottom (bottom line)
+        arcade.draw_line(113, 229, 252, 229, arcade.color.BLUE, 4)
+
+        # Left Border, under the last divit
+        # Left border (left line)
+        arcade.draw_line(100, 246, 100, 3, arcade.color.BLUE, 4)
+        # Left border (right line)
+        arcade.draw_line(115, 230, 115, 18, arcade.color.BLUE, 4)
+
+
+        # RECTANGLES THROUGHOUT THE BOARD
+        # Rectangle (top left)
+        arcade.draw_lrbt_rectangle_outline(170, 250, 490, 535, arcade.color.BLUE, 4)
+        # Rectangle (top left, second over)
+        arcade.draw_lrbt_rectangle_outline(295, 410, 490, 535, arcade.color.BLUE, 4)
+        # Rectangle (top left, below rectangle to the leftest)
+        arcade.draw_lrbt_rectangle_outline(170, 250, 423, 440, arcade.color.BLUE, 4)
+        # Rectangle (bottom, leftest most)
+        arcade.draw_lrbt_rectangle_outline(170, 250, 70, 184, arcade.color.BLUE, 4)
+
+
+
+        # Left divit (top)
+        arcade.draw_line(780, 373, 650, 373, arcade.color.BLUE, 4)
+        arcade.draw_line(795, 358, 900 - 235, 358, arcade.color.BLUE, 4)
+        arcade.draw_line(650, 326, 650, 375, arcade.color.BLUE, 4)
+        arcade.draw_line(665, 340, 900 - 235, 360, arcade.color.BLUE, 4)
+        arcade.draw_line(797, 342, 663, 342, arcade.color.BLUE, 4)
+        arcade.draw_line(797, 327, 648, 327, arcade.color.BLUE, 4)
+
+        # Left divit (bottom)
+        arcade.draw_line(797, 277, 650, 277, arcade.color.BLUE, 4)
+        arcade.draw_line(797, 262, 665, 262, arcade.color.BLUE, 4)
+        arcade.draw_line(650, 230, 650, 279, arcade.color.BLUE, 4)
+        arcade.draw_line(665, 244, 665, 264, arcade.color.BLUE, 4)
+        arcade.draw_line(795, 244, 663, 244, arcade.color.BLUE, 4)
+        arcade.draw_line(780, 229, 648, 229, arcade.color.BLUE, 4)
+
+        # Left border under the last divit
+        arcade.draw_line(795, 246, 795, 3, arcade.color.BLUE, 4)
+        arcade.draw_line(780, 230, 780, 18, arcade.color.BLUE, 4)
+
+        # Rectangle (top left → top right)
+        arcade.draw_lrbt_rectangle_outline(522, 637, 490, 535, arcade.color.BLUE, 4)
+        # Rectangle (second over → mirrored to left of right side)
+        arcade.draw_lrbt_rectangle_outline(682, 730, 490, 535, arcade.color.BLUE, 4)
+        # Rectangle (second over → mirrored to left of right side)
+        # Rectangle below first → mirrored
+        arcade.draw_lrbt_rectangle_outline(650, 730, 423, 440, arcade.color.BLUE, 4)
+
+        # ghost cage
+        # outer rectangle
+        arcade.draw_line(360, 240, 550, 240, arcade.color.BLUE, 4)
+
+        # Draw sprites
         self.controllable_list.draw()
         self.consumable_list.draw()
-    
-
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
