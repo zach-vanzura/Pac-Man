@@ -55,6 +55,21 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
+# Set pellet point values
+PELLET_VALUE = 10
+ENERGIZER_PELLET_VALUE = 50
+
+# Set fruit point values 
+CHERRY_VALUE = 100
+STRAWBERRY_VALUE = 300
+ORANGE_VALUE = 500
+APPLE_VALUE = 700
+MELON_VALUE = 1000
+GALAXIAN_VALUE = 2000
+BELL_VALUE = 3000
+KEY_VALUE = 5000
+
+# Set tile size
 TILE_SIZE = 32
 
 
@@ -81,6 +96,13 @@ class GameView(arcade.View):
         # Set up the player info
         self.player_sprite = None
         self.pellet_sprite = None
+        self.energizer_pellet_sprite = None
+        self.cherry_sprite = None
+        self.strawberry_sprite = None
+        self.orange_sprite = None
+        self.apple_sprite = None
+        self.melon_sprite = None
+        self.galaxian_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -144,6 +166,45 @@ class GameView(arcade.View):
                     pellet.center_x = x
                     pellet.center_y = y
                     self.consumable_list.append(pellet)
+                    
+        #TODO: alter code to align with tile format instead of random placement in window
+        for i in range(1, 5):  # the 4 energizer pellets
+            self.energizer_pellet_sprite = Consumable("images/pellet.png", 0.2, WINDOW_WIDTH, WINDOW_HEIGHT)
+            self.energizer_pellet_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+            self.energizer_pellet_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+            self.consumable_list.append(self.energizer_pellet_sprite)
+
+        # Set up the fruits
+        self.cherry_sprite = Consumable("images/cherry.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.cherry_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.cherry_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.cherry_sprite)
+
+        self.strawberry_sprite = Consumable("images/strawberry.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.strawberry_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.strawberry_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.strawberry_sprite)
+
+        self.orange_sprite = Consumable("images/orange.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.orange_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.orange_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.orange_sprite)
+
+        self.apple_sprite = Consumable("images/apple.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.apple_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.apple_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.apple_sprite)
+
+        self.melon_sprite = Consumable("images/melon.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.melon_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.melon_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.melon_sprite)
+
+        self.galaxian_sprite = Consumable("images/galaxian.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.galaxian_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
+        self.galaxian_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
+        self.consumable_list.append(self.galaxian_sprite)
+
 
     def on_draw(self):
         self.clear()
@@ -296,6 +357,27 @@ class GameView(arcade.View):
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
             sprite.set_eaten()
+            if sprite == self.pellet_sprite:
+                self.player_sprite.score += PELLET_VALUE
+            elif sprite == self.energizer_pellet_sprite:
+                self.player_sprite.score += ENERGIZER_PELLET_VALUE
+            elif sprite == self.cherry_sprite:
+                self.player_sprite.score += CHERRY_VALUE
+            elif sprite == self.strawberry_sprite:
+                self.player_sprite.score += STRAWBERRY_VALUE
+            elif sprite == self.orange_sprite:
+                self.player_sprite.score += ORANGE_VALUE
+            elif sprite == self.apple_sprite:
+                self.player_sprite.score += APPLE_VALUE
+            elif sprite == self.melon_sprite:
+                self.player_sprite.score += MELON_VALUE
+            elif sprite == self.galaxian_sprite:
+                self.player_sprite.score += GALAXIAN_VALUE
+            # elif sprite == self.bell_sprite:
+            #     score += BELL_VALUE
+            # elif sprite == self.key_sprite:
+            #     score += KEY_VALUE
+            print(self.player_sprite.score)
         for sprite in self.consumable_list:
             sprite.update()
 
