@@ -24,6 +24,7 @@ class Consumable(arcade.Sprite):
         self.window_width, self.window_height = window_width, window_height
         self.is_edible = True
         self.is_eaten = False
+        self.score = None
 
     def update(self, delta_time: float = 1 / 60):
         """ Move the Player Sprite """

@@ -3,8 +3,17 @@ import random
 # TODO: Begin using pylint
 
 import arcade
+from apple import Apple
+from bell import Bell
 from controllable import Controllable
 from consumable import Consumable
+from cherry import Cherry
+from galaxian import Galaxian
+from pellet_energizer import EnergizerPellet as Energizer
+from melon import Melon
+from orange import Orange
+from pellet_small import Pellet
+from strawberry import Strawberry
 
 """
 CS3050: Software Engineering
@@ -57,18 +66,7 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
-# Set pellet point values
-PELLET_VALUE = 10
-ENERGIZER_PELLET_VALUE = 50
-
 # Set fruit point values 
-CHERRY_VALUE = 100
-STRAWBERRY_VALUE = 300
-ORANGE_VALUE = 500
-APPLE_VALUE = 700
-MELON_VALUE = 1000
-GALAXIAN_VALUE = 2000
-BELL_VALUE = 3000
 KEY_VALUE = 5000
 
 # Set tile size
@@ -127,7 +125,7 @@ class GameView(arcade.View):
 
         # Set up Pac-Man
         self.player_sprite = Controllable("images/pacman-static.png",
-                                           SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
+                                          SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.player_sprite.center_x = 15
         self.player_sprite.center_y = 700
         self.controllable_list.append(self.player_sprite)
@@ -165,10 +163,9 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == ".":
-                    self.pellet_sprite = Consumable("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.pellet_sprite.center_x = x
                     self.pellet_sprite.center_y = y
-                    self.pellet_sprite.type = "pellet"
                     self.consumable_list.append(self.pellet_sprite)
                     
         for row_index, row in enumerate(pellet_map):
@@ -177,10 +174,9 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "-":
-                    self.energizer_pellet_sprite = Consumable("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.energizer_pellet_sprite.center_x = x
                     self.energizer_pellet_sprite.center_y = y
-                    self.energizer_pellet_sprite.type = "energizer_pellet"
                     self.consumable_list.append(self.energizer_pellet_sprite)
 
         # Set up the fruits
@@ -190,7 +186,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "c":
-                    self.cherry_sprite = Consumable("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.cherry_sprite.center_x = x
                     self.cherry_sprite.center_y = y
                     self.consumable_list.append(self.cherry_sprite)
@@ -201,7 +197,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "s":
-                    self.strawberry_sprite = Consumable("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.strawberry_sprite.center_x = x
                     self.strawberry_sprite.center_y = y
                     self.consumable_list.append(self.strawberry_sprite)
@@ -212,7 +208,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "o":
-                    self.orange_sprite = Consumable("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.orange_sprite.center_x = x
                     self.orange_sprite.center_y = y
                     self.consumable_list.append(self.orange_sprite)
@@ -223,7 +219,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "a":
-                    self.apple_sprite = Consumable("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.apple_sprite.center_x = x
                     self.apple_sprite.center_y = y
                     self.consumable_list.append(self.apple_sprite)
@@ -234,7 +230,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "m":
-                    self.melon_sprite = Consumable("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.melon_sprite.center_x = x
                     self.melon_sprite.center_y = y
                     self.consumable_list.append(self.melon_sprite)
@@ -245,7 +241,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "g":
-                    self.galaxian_sprite = Consumable("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.galaxian_sprite.center_x = x
                     self.galaxian_sprite.center_y = y
                     self.consumable_list.append(self.galaxian_sprite)
@@ -256,7 +252,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "b":
-                    self.bell_sprite = Consumable("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.bell_sprite.center_x = x
                     self.bell_sprite.center_y = y
                     self.consumable_list.append(self.bell_sprite)
@@ -268,7 +264,7 @@ class GameView(arcade.View):
         # margin between border = 15
         # margin between path = 50, 45
 
-
+        # TODO: this could go in its own file eventually (maze class) which would clean up code
         # BORDER GOING AROUND THE GAME
         # Top border (top line)
         arcade.draw_line(100, 600, 797, 600, arcade.color.BLUE, 4)
@@ -413,25 +409,8 @@ class GameView(arcade.View):
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
             sprite.set_eaten()
-            if hasattr(sprite, "type"):
-                if sprite.type == "pellet":
-                    self.player_sprite.score += PELLET_VALUE
-                elif sprite.type == "energizer_pellet":
-                    self.player_sprite.score += ENERGIZER_PELLET_VALUE
-            elif sprite == self.cherry_sprite:
-                self.player_sprite.score += CHERRY_VALUE
-            elif sprite == self.strawberry_sprite:
-                self.player_sprite.score += STRAWBERRY_VALUE
-            elif sprite == self.orange_sprite:
-                self.player_sprite.score += ORANGE_VALUE
-            elif sprite == self.apple_sprite:
-                self.player_sprite.score += APPLE_VALUE
-            elif sprite == self.melon_sprite:
-                self.player_sprite.score += MELON_VALUE
-            elif sprite == self.galaxian_sprite:
-                self.player_sprite.score += GALAXIAN_VALUE
-            elif sprite == self.bell_sprite:
-                self.player_sprite.score += BELL_VALUE
+            self.player_sprite.score += sprite.score
+
             # elif sprite == self.key_sprite:
             #     self.player_sprite.score += KEY_VALUE
             print(self.player_sprite.score)
