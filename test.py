@@ -133,23 +133,23 @@ class GameView(arcade.View):
         # - # is where you don't want pellet to be
         # - . is where you want pellet to be
         pellet_map = [
-            "####..........#.........",
+            "####...-...g..#.........",
             "####.###.####.#.####.##.",
             "####.###.####.#.####.##.",
-            "####....................",
+            "####............m.......",
             "####.###............###.",
-            "####....................",
+            "####.............-......",
+            "########.#..o.......####",
             "########.#..........####",
             "########.#..........####",
-            "########.#..........####",
-            "########.#..........####",
+            "########.#..-.......####",
             "########.#.######.#.####",
-            "####....................",
+            "####.....s..............",
             "####.###................",
-            "####.###................",
+            "####.###............c...",
+            "####.###...-..#.........",
             "####.###......#.........",
-            "####.###......#.........",
-            "####..........#.........",
+            "####..........#...a.....",
             "########################",
         ]
 
@@ -162,48 +162,90 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == ".":
-                    pellet = Consumable("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    pellet.center_x = x
-                    pellet.center_y = y
-                    self.consumable_list.append(pellet)
+                    self.pellet_sprite = Consumable("Final_Project/images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.pellet_sprite.center_x = x
+                    self.pellet_sprite.center_y = y
+                    self.pellet_sprite.type = "pellet"
+                    self.consumable_list.append(self.pellet_sprite)
                     
-        #TODO: alter code to align with tile format instead of random placement in window
-        for i in range(1, 5):  # the 4 energizer pellets
-            self.energizer_pellet_sprite = Consumable("images/pellet.png", 0.2, WINDOW_WIDTH, WINDOW_HEIGHT)
-            self.energizer_pellet_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-            self.energizer_pellet_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-            self.consumable_list.append(self.energizer_pellet_sprite)
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+
+                if tile == "-":
+                    self.energizer_pellet_sprite = Consumable("Final_Project/images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.energizer_pellet_sprite.center_x = x
+                    self.energizer_pellet_sprite.center_y = y
+                    self.energizer_pellet_sprite.type = "energizer_pellet"
+                    self.consumable_list.append(self.energizer_pellet_sprite)
 
         # Set up the fruits
-        self.cherry_sprite = Consumable("images/cherry.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.cherry_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.cherry_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.cherry_sprite)
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
-        self.strawberry_sprite = Consumable("images/strawberry.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.strawberry_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.strawberry_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.strawberry_sprite)
+                if tile == "c":
+                    self.cherry_sprite = Consumable("Final_Project/images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.cherry_sprite.center_x = x
+                    self.cherry_sprite.center_y = y
+                    self.consumable_list.append(self.cherry_sprite)
 
-        self.orange_sprite = Consumable("images/orange.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.orange_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.orange_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.orange_sprite)
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
-        self.apple_sprite = Consumable("images/apple.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.apple_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.apple_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.apple_sprite)
+                if tile == "s":
+                    self.strawberry_sprite = Consumable("Final_Project/images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.strawberry_sprite.center_x = x
+                    self.strawberry_sprite.center_y = y
+                    self.consumable_list.append(self.strawberry_sprite)
 
-        self.melon_sprite = Consumable("images/melon.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.melon_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.melon_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.melon_sprite)
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
-        self.galaxian_sprite = Consumable("images/galaxian.png", 0.15, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.galaxian_sprite.center_x = random.randrange(20, WINDOW_WIDTH - 20, 50)
-        self.galaxian_sprite.center_y = random.randrange(20, WINDOW_HEIGHT - 20, 50)
-        self.consumable_list.append(self.galaxian_sprite)
+                if tile == "o":
+                    self.orange_sprite = Consumable("Final_Project/images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.orange_sprite.center_x = x
+                    self.orange_sprite.center_y = y
+                    self.consumable_list.append(self.orange_sprite)
+
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+
+                if tile == "a":
+                    self.apple_sprite = Consumable("Final_Project/images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.apple_sprite.center_x = x
+                    self.apple_sprite.center_y = y
+                    self.consumable_list.append(self.apple_sprite)
+
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+
+                if tile == "m":
+                    self.melon_sprite = Consumable("Final_Project/images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.melon_sprite.center_x = x
+                    self.melon_sprite.center_y = y
+                    self.consumable_list.append(self.melon_sprite)
+
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+
+                if tile == "g":
+                    self.galaxian_sprite = Consumable("Final_Project/images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.galaxian_sprite.center_x = x
+                    self.galaxian_sprite.center_y = y
+                    self.consumable_list.append(self.galaxian_sprite)
 
 
     def on_draw(self):
@@ -357,10 +399,11 @@ class GameView(arcade.View):
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
             sprite.set_eaten()
-            if sprite == self.pellet_sprite:
-                self.player_sprite.score += PELLET_VALUE
-            elif sprite == self.energizer_pellet_sprite:
-                self.player_sprite.score += ENERGIZER_PELLET_VALUE
+            if hasattr(sprite, "type"):
+                if sprite.type == "pellet":
+                    self.player_sprite.score += PELLET_VALUE
+                elif sprite.type == "energizer_pellet":
+                    self.player_sprite.score += ENERGIZER_PELLET_VALUE
             elif sprite == self.cherry_sprite:
                 self.player_sprite.score += CHERRY_VALUE
             elif sprite == self.strawberry_sprite:
