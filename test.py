@@ -103,6 +103,7 @@ class GameView(arcade.View):
         self.apple_sprite = None
         self.melon_sprite = None
         self.galaxian_sprite = None
+        self.bell_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -149,7 +150,7 @@ class GameView(arcade.View):
             "####.###............c...",
             "####.###...-..#.........",
             "####.###......#.........",
-            "####..........#...a.....",
+            "####..b.......#...a.....",
             "########################",
         ]
 
@@ -246,6 +247,17 @@ class GameView(arcade.View):
                     self.galaxian_sprite.center_x = x
                     self.galaxian_sprite.center_y = y
                     self.consumable_list.append(self.galaxian_sprite)
+
+        for row_index, row in enumerate(pellet_map):
+            for col_index, tile in enumerate(row):
+                x = col_index * TILE_SIZE + offset_x
+                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+
+                if tile == "b":
+                    self.bell_sprite = Consumable("Final_Project/images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.bell_sprite.center_x = x
+                    self.bell_sprite.center_y = y
+                    self.consumable_list.append(self.bell_sprite)
 
 
     def on_draw(self):
@@ -416,8 +428,8 @@ class GameView(arcade.View):
                 self.player_sprite.score += MELON_VALUE
             elif sprite == self.galaxian_sprite:
                 self.player_sprite.score += GALAXIAN_VALUE
-            # elif sprite == self.bell_sprite:
-            #     score += BELL_VALUE
+            elif sprite == self.bell_sprite:
+                score += BELL_VALUE
             # elif sprite == self.key_sprite:
             #     score += KEY_VALUE
             print(self.player_sprite.score)
