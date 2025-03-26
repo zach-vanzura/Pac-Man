@@ -429,9 +429,9 @@ class GameView(arcade.View):
             elif sprite == self.galaxian_sprite:
                 self.player_sprite.score += GALAXIAN_VALUE
             elif sprite == self.bell_sprite:
-                score += BELL_VALUE
+                self.player_sprite.score += BELL_VALUE
             # elif sprite == self.key_sprite:
-            #     score += KEY_VALUE
+            #     self.player_sprite.score += KEY_VALUE
             print(self.player_sprite.score)
         for sprite in self.consumable_list:
             sprite.update()
