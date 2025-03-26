@@ -163,7 +163,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == ".":
-                    self.pellet_sprite = Consumable("Final_Project/images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.pellet_sprite = Consumable("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.pellet_sprite.center_x = x
                     self.pellet_sprite.center_y = y
                     self.pellet_sprite.type = "pellet"
@@ -175,7 +175,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "-":
-                    self.energizer_pellet_sprite = Consumable("Final_Project/images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.energizer_pellet_sprite = Consumable("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.energizer_pellet_sprite.center_x = x
                     self.energizer_pellet_sprite.center_y = y
                     self.energizer_pellet_sprite.type = "energizer_pellet"
@@ -188,7 +188,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "c":
-                    self.cherry_sprite = Consumable("Final_Project/images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.cherry_sprite = Consumable("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.cherry_sprite.center_x = x
                     self.cherry_sprite.center_y = y
                     self.consumable_list.append(self.cherry_sprite)
@@ -199,7 +199,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "s":
-                    self.strawberry_sprite = Consumable("Final_Project/images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.strawberry_sprite = Consumable("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.strawberry_sprite.center_x = x
                     self.strawberry_sprite.center_y = y
                     self.consumable_list.append(self.strawberry_sprite)
@@ -210,7 +210,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "o":
-                    self.orange_sprite = Consumable("Final_Project/images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.orange_sprite = Consumable("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.orange_sprite.center_x = x
                     self.orange_sprite.center_y = y
                     self.consumable_list.append(self.orange_sprite)
@@ -221,7 +221,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "a":
-                    self.apple_sprite = Consumable("Final_Project/images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.apple_sprite = Consumable("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.apple_sprite.center_x = x
                     self.apple_sprite.center_y = y
                     self.consumable_list.append(self.apple_sprite)
@@ -232,7 +232,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "m":
-                    self.melon_sprite = Consumable("Final_Project/images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.melon_sprite = Consumable("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.melon_sprite.center_x = x
                     self.melon_sprite.center_y = y
                     self.consumable_list.append(self.melon_sprite)
@@ -243,7 +243,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "g":
-                    self.galaxian_sprite = Consumable("Final_Project/images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.galaxian_sprite = Consumable("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.galaxian_sprite.center_x = x
                     self.galaxian_sprite.center_y = y
                     self.consumable_list.append(self.galaxian_sprite)
@@ -254,7 +254,7 @@ class GameView(arcade.View):
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
                 if tile == "b":
-                    self.bell_sprite = Consumable("Final_Project/images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.bell_sprite = Consumable("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.bell_sprite.center_x = x
                     self.bell_sprite.center_y = y
                     self.consumable_list.append(self.bell_sprite)
