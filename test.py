@@ -1,5 +1,7 @@
 import random
 
+# TODO: Begin using pylint
+
 import arcade
 from controllable import Controllable
 from consumable import Consumable
