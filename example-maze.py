@@ -6,6 +6,9 @@ the entire pacman screen is 28 tiles wide and 36 tiles tall
 the PLAYABLE maze is 28 x 31
 
 thus, each character in the following string represents a tile
+
+I am using this steam link as a reference:
+https://images.steamusercontent.com/ugc/367408356169798800/55F56BDFA947A6CE6E187876C62BFE76362D6320/
 """
 """
 This is the layout for the POSITION of each tile
