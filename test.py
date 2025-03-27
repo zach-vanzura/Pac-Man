@@ -1,19 +1,16 @@
-import random
-
 # TODO: Begin using pylint
 
 import arcade
-from apple import Apple
-from bell import Bell
+from consumables.apple import Apple
+from consumables.bell import Bell
 from controllable import Controllable
-from consumable import Consumable
-from cherry import Cherry
-from galaxian import Galaxian
-from pellet_energizer import EnergizerPellet as Energizer
-from melon import Melon
-from orange import Orange
-from pellet_small import Pellet
-from strawberry import Strawberry
+from consumables.cherry import Cherry
+from consumables.galaxian import Galaxian
+from consumables.pellet_energizer import EnergizerPellet as Energizer
+from consumables.melon import Melon
+from consumables.orange import Orange
+from consumables.pellet_small import Pellet
+from consumables.strawberry import Strawberry
 
 """
 CS3050: Software Engineering
@@ -53,6 +50,8 @@ for now, 900px = 720px * 1.25
 # add various menus/start screens/end screens (look up what is actually in pacman),
 # etc...
 
+
+# TODO: assign scaling to each sprite
 # Set scale of sprite
 SPRITE_SCALING = 0.025
 
@@ -104,12 +103,14 @@ class GameView(arcade.View):
         self.melon_sprite = None
         self.galaxian_sprite = None
         self.bell_sprite = None
+        # self.key_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
         self.right_pressed = False
         self.up_pressed = False
         self.down_pressed = False
+        # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
         # Set background color
@@ -162,95 +163,63 @@ class GameView(arcade.View):
                 x = col_index * TILE_SIZE + offset_x
                 y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
+                # small pellet
                 if tile == ".":
                     self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.pellet_sprite.center_x = x
                     self.pellet_sprite.center_y = y
                     self.consumable_list.append(self.pellet_sprite)
-                    
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
 
+                # energizer
                 if tile == "-":
                     self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.energizer_pellet_sprite.center_x = x
                     self.energizer_pellet_sprite.center_y = y
                     self.consumable_list.append(self.energizer_pellet_sprite)
 
-        # Set up the fruits
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # cherry
                 if tile == "c":
                     self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.cherry_sprite.center_x = x
                     self.cherry_sprite.center_y = y
                     self.consumable_list.append(self.cherry_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # strawberry
                 if tile == "s":
                     self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.strawberry_sprite.center_x = x
                     self.strawberry_sprite.center_y = y
                     self.consumable_list.append(self.strawberry_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # orange
                 if tile == "o":
                     self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.orange_sprite.center_x = x
                     self.orange_sprite.center_y = y
                     self.consumable_list.append(self.orange_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # apple
                 if tile == "a":
                     self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.apple_sprite.center_x = x
                     self.apple_sprite.center_y = y
                     self.consumable_list.append(self.apple_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # melon
                 if tile == "m":
                     self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.melon_sprite.center_x = x
                     self.melon_sprite.center_y = y
                     self.consumable_list.append(self.melon_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # galaxian
                 if tile == "g":
                     self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.galaxian_sprite.center_x = x
                     self.galaxian_sprite.center_y = y
                     self.consumable_list.append(self.galaxian_sprite)
 
-        for row_index, row in enumerate(pellet_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-
+                # bell
                 if tile == "b":
                     self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.bell_sprite.center_x = x
