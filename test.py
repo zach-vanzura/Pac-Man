@@ -54,7 +54,7 @@ for now, 900px = 720px * 1.25
 
 # TODO: assign scaling to each sprite
 # Set scale of sprite
-SPRITE_SCALING = 0.025
+SPRITE_SCALING = 0.013
 
 # Set window height and width in 5:4 ratio
 WINDOW_WIDTH = 900
