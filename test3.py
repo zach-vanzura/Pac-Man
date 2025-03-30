@@ -74,37 +74,34 @@ class Controllable(arcade.Sprite):
         elif self.top > self.window_height:
             self.bottom = 0
 
-class Ghost(arcade.Sprite):
-    def __init__(self, path_to_sprite, scale, ghost_type, player, blinky=None):
-        super().__init__(path_to_sprite, scale=scale)
+class Ghost(Controllable):
+    def __init__(self, path_to_sprite, scale, ghost_type, player, window_width, window_height, blinky=None):
+        super().__init__(path_to_sprite, scale, window_width, window_height)
         self.ghost_type = ghost_type
         self.player = player
-        self.blinky = blinky  # Needed for Inky's logic
+        self.blinky = blinky
 
     def get_target_tile(self):
         pacman_tile = (self.player.center_x // TILE_SIZE, self.player.center_y // TILE_SIZE)
-        
+
         if self.ghost_type == "Blinky":
             return pacman_tile
-        
+
         elif self.ghost_type == "Pinky":
             offset_x = math.cos(math.radians(self.player.angle)) * 4
             offset_y = math.sin(math.radians(self.player.angle)) * 4
             return (pacman_tile[0] + offset_x, pacman_tile[1] + offset_y)
-        
+
         elif self.ghost_type == "Inky" and self.blinky:
             blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
             vector_x = (pacman_tile[0] - blinky_tile[0]) * 2
             vector_y = (pacman_tile[1] - blinky_tile[1]) * 2
             return (blinky_tile[0] + vector_x, blinky_tile[1] + vector_y)
-        
+
         elif self.ghost_type == "Clyde":
             distance = math.sqrt((self.center_x - self.player.center_x) ** 2 + (self.center_y - self.player.center_y) ** 2)
-            if distance > TILE_SIZE * 8:
-                return pacman_tile
-            else:
-                return (5, 5)  # Clyde's corner
-        
+            return pacman_tile if distance > TILE_SIZE * 8 else (5, 5)
+
         return pacman_tile
     
     def update(self, delta_time: float = 1 / 60):
@@ -181,8 +178,12 @@ class GameView(arcade.View):
 
         temp_ghosts = []
         for i in range(4):
-            ghost_sprite = Ghost(ghost_images[i], scale=GHOST_SCALING, 
-                                 ghost_type=ghost_types[i], player=self.player_sprite)
+            ghost_sprite = Ghost(path_to_sprite=ghost_images[i],
+                                scale=GHOST_SCALING,
+                                ghost_type=ghost_types[i],
+                                player=self.player_sprite,
+                                window_width=WINDOW_WIDTH,
+                                window_height=WINDOW_HEIGHT)
             ghost_sprite.center_x = WINDOW_WIDTH / 2 + (i * 50) - 75
             ghost_sprite.center_y = (WINDOW_HEIGHT / 2) + 200
             self.ghost_list.append(ghost_sprite)
