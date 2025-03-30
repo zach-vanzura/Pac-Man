@@ -1,4 +1,7 @@
-# TODO: Begin using pylint
+"""
+This is the test suit used in each branch of the project to test the implementations that each group memeber is making
+"""
+
 
 import arcade
 from consumables.apple import Apple
@@ -12,6 +15,8 @@ from consumables.melon import Melon
 from consumables.orange import Orange
 from consumables.pellet_small import Pellet
 from consumables.strawberry import Strawberry
+import pylint
+
 
 """
 CS3050: Software Engineering
@@ -22,9 +27,7 @@ Group Members:
     Ashton Putnam
     Zach Vanzura
     Alexa Witkin
-"""
 
-"""
 Based on Starting Template Using Window Class in the PyArcade Docs
 Additionally, added components from Better Move By Keyboard
 
@@ -45,7 +48,7 @@ pixel width = pixel height * 1.25
 for now, 900px = 720px * 1.25
 """
 
-#TODO: create mazes, create start menu screen, add animations, add enemy sprites,
+# TODO: create mazes, create start menu screen, add animations, add enemy sprites,
 # add pellets, add fruit, add power-ups, add score tracking, add high-score tracking,
 # add enemy movement and attacking, add settings menu, add alternative sprites (Jason's face),
 # add various menus/start screens/end screens (look up what is actually in pacman),
@@ -163,63 +166,72 @@ class GameView(arcade.View):
 
                 # small pellet
                 if tile == ".":
-                    self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.pellet_sprite = Pellet("images/pellet.png", 0.05,
+                                                WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.pellet_sprite.center_x = x
                     self.pellet_sprite.center_y = y
                     self.consumable_list.append(self.pellet_sprite)
 
                 # energizer
                 if tile == "-":
-                    self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1,
+                                                             WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.energizer_pellet_sprite.center_x = x
                     self.energizer_pellet_sprite.center_y = y
                     self.consumable_list.append(self.energizer_pellet_sprite)
 
                 # cherry
                 if tile == "c":
-                    self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.cherry_sprite = Cherry("images/cherry.png", 0.07,
+                                                WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.cherry_sprite.center_x = x
                     self.cherry_sprite.center_y = y
                     self.consumable_list.append(self.cherry_sprite)
 
                 # strawberry
                 if tile == "s":
-                    self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09,
+                                                        WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.strawberry_sprite.center_x = x
                     self.strawberry_sprite.center_y = y
                     self.consumable_list.append(self.strawberry_sprite)
 
                 # orange
                 if tile == "o":
-                    self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.orange_sprite = Orange("images/orange.png", 0.07,
+                                                WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.orange_sprite.center_x = x
                     self.orange_sprite.center_y = y
                     self.consumable_list.append(self.orange_sprite)
 
                 # apple
                 if tile == "a":
-                    self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.apple_sprite = Apple("images/apple.png", 0.1,
+                                              WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.apple_sprite.center_x = x
                     self.apple_sprite.center_y = y
                     self.consumable_list.append(self.apple_sprite)
 
                 # melon
                 if tile == "m":
-                    self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.melon_sprite = Melon("images/melon.png", 0.1,
+                                              WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.melon_sprite.center_x = x
                     self.melon_sprite.center_y = y
                     self.consumable_list.append(self.melon_sprite)
 
                 # galaxian
                 if tile == "g":
-                    self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1,
+                                                    WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.galaxian_sprite.center_x = x
                     self.galaxian_sprite.center_y = y
                     self.consumable_list.append(self.galaxian_sprite)
 
                 # bell
                 if tile == "b":
-                    self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.bell_sprite = Bell("images/bell.png", 0.08,
+                                            WINDOW_WIDTH, WINDOW_HEIGHT)
                     self.bell_sprite.center_x = x
                     self.bell_sprite.center_y = y
                     self.consumable_list.append(self.bell_sprite)
@@ -385,14 +397,9 @@ class GameView(arcade.View):
             sprite.set_eaten()
             self.player_sprite.score += sprite.score
 
-            # elif sprite == self.key_sprite:
-            #     self.player_sprite.score += KEY_VALUE
             print(self.player_sprite.score)
         for sprite in self.consumable_list:
             sprite.update()
-
-    
-
 
     def on_key_press(self, key, key_modifiers):
         """
