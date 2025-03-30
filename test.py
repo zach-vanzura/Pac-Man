@@ -7,7 +7,7 @@ from controllable import Controllable
 from consumables.cherry import Cherry
 from consumables.galaxian import Galaxian
 from consumables.pellet_energizer import EnergizerPellet as Energizer
-from consumables.key import Key
+# from consumables.key import Key
 from consumables.melon import Melon
 from consumables.orange import Orange
 from consumables.pellet_small import Pellet
@@ -38,14 +38,13 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 - Ashton
 """
 
-
 """
 Pac-Man and other arcade games use a 5:4 window ratio
 pixel width = pixel height * 1.25
 for now, 900px = 720px * 1.25
 """
 
-#TODO: create mazes, create start menu screen, add animations, add enemy sprites,
+# TODO: create mazes, create start menu screen, add animations, add enemy sprites,
 # add pellets, add fruit, add power-ups, add score tracking, add high-score tracking,
 # add enemy movement and attacking, add settings menu, add alternative sprites (Jason's face),
 # add various menus/start screens/end screens (look up what is actually in pacman),
@@ -54,11 +53,14 @@ for now, 900px = 720px * 1.25
 
 # TODO: assign scaling to each sprite
 # Set scale of sprite
-SPRITE_SCALING = 0.013
+SPRITE_SCALING = 0.025
+#SPRITE_SCALING = 0.013
+
+# Set tile size
+TILE_SIZE = 20
 
 # Set window height and width in 5:4 ratio
-WINDOW_WIDTH = 900
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 28 * TILE_SIZE  # 28 columns
 
 # Set window title
 WINDOW_TITLE = "PAC-MAN"
@@ -66,8 +68,8 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
-# Set tile size
-TILE_SIZE = 32
+# Set fruit point values
+KEY_VALUE = 5000
 
 
 class GameView(arcade.View):
@@ -101,7 +103,7 @@ class GameView(arcade.View):
         self.melon_sprite = None
         self.galaxian_sprite = None
         self.bell_sprite = None
-        self.key_sprite = None
+        # self.key_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -122,237 +124,230 @@ class GameView(arcade.View):
         self.consumable_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
 
-        # Set up Pac-Man
-        self.player_sprite = Controllable("images/pacman-static.png",
-                                          SPRITE_SCALING, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.player_sprite.center_x = 15
-        self.player_sprite.center_y = 700
-        self.controllable_list.append(self.player_sprite)
-
-        # Pellet Map
-        # - # is where you don't want pellet to be
-        # - . is where you want pellet to be
-        pellet_map = [
-            "####...-...g..#.........",
-            "####.###.####.#.####.##.",
-            "####.###.####.#.####.##.",
-            "####............m.......",
-            "####.###............###.",
-            "####.............-......",
-            "########.#..o.......####",
-            "########.#..........####",
-            "########.#..........####",
-            "########.#..-.......####",
-            "########.#.######.#.####",
-            "####.....s..............",
-            "####.###................",
-            "####.###............c...",
-            "####.###...-..#....k....",
-            "####.###......#.........",
-            "####..b.......#...a.....",
-            "########################",
+        self.wall_map = [
+            "############################",
+            "############################",
+            "############################",
+            "C============PP============4",
+            "S............||............S",
+            "S.*--+.*---+.##.*---+.*--+.S",
+            "So/##?./###?.##./###?./##?oS",
+            "S.&(().&((().##.&((().&(().S",
+            "S..........................S",
+            "S.L||L.LL.L||||||L.LL.L||L.S",
+            "S.L||L.||.L||LL||L.||.L||L.S",
+            "S......||....||....||......S",
+            "2====4.|L||L#||#L||L|.C====3",
+            "#####S.|L||L#LL#L||L|.S#####",
+            "#####S.||##########||.S#####",
+            "#####S.||#j==__==j#||.S#####",
+            "=====3.LL#=######=#LL.2=====",
+            "######.###=######=###.######",
+            "=====4.LL#=######=#LL.C=====",
+            "#####S.||#j======j#||.S#####",
+            "#####S.||##########||.S#####",
+            "#####S.||#L||||||L#||.S#####",
+            "C====3.LL#L||LL||L#LL.2====4",
+            "S............||............S",
+            "S.L||L.L|||L.||.L|||L.L||L.S",
+            "S.L|L|.L|||L.LL.L|||L.L||L.S",
+            "So..||.......##.......||..oS",
+            "H|L.||.LL.L||||||L.LL.||.L|H",
+            "H|L.LL.||.L||LL||L.||.LL.L|H",
+            "S......||....||....||......S",
+            "S.L||||LL||L.||.L||LL||||L.S",
+            "S..........................S",
+            "2==========================3",
+            "############################",
+            "############################",
         ]
+
+        # Set window height dynamically based on the map
+        self.map_height = len(self.wall_map)
+        self.window.set_size(WINDOW_WIDTH, self.map_height * TILE_SIZE)
+
+        # Map of characters to wall textures
+        tile_textures = {
+            "C": arcade.load_texture("images/corner.png"),
+            "=": arcade.load_texture("images/straight-piece.png"),
+            "S": arcade.load_texture("images/vertical-piece.png"),
+            "L": arcade.load_texture("images/single-line-corner.png"),
+            "*": arcade.load_texture("images/single-line-corner.png"),
+            "-": arcade.load_texture("images/straight-single-line.png"),
+            "/": arcade.load_texture("images/vertical-single-line.png"),
+            "?": arcade.load_texture("images/vertical-right-single-line.png"),
+            "+": arcade.load_texture("images/corner-single-right.png"),
+            "(": arcade.load_texture("images/bottom-single-line.png"),
+            ")": arcade.load_texture("images/bottom-right-single-corner.png"),
+            "&": arcade.load_texture("images/bottom-left-corner-single.png"),
+            "1": arcade.load_texture("images/corner.png"),
+            "2": arcade.load_texture("images/corner.png"),
+            "3": arcade.load_texture("images/corner.png"),
+            "4": arcade.load_texture("images/corner.png"),
+            "5": arcade.load_texture("images/single-line-corner.png"),
+            "6": arcade.load_texture("images/single-line-corner.png"),
+            "7": arcade.load_texture("images/single-line-corner.png"),
+            "8": arcade.load_texture("images/single-line-corner.png"),
+
+        }
 
         offset_x = TILE_SIZE // 2
         offset_y = TILE_SIZE // 2
+        map_height = self.map_height
 
-        for row_index, row in enumerate(pellet_map):
+        # Build wall tiles using same logic as pellets
+        for row_index, row in enumerate(self.wall_map):
             for col_index, tile in enumerate(row):
                 x = col_index * TILE_SIZE + offset_x
-                y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+                y = (map_height - row_index - 1) * TILE_SIZE + offset_y
 
-                # small pellet
-                if tile == ".":
-                    self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+                if tile in tile_textures:
+                    sprite = arcade.Sprite()
+                    sprite.texture = tile_textures[tile]
+                    sprite.center_x = x
+                    sprite.center_y = y
+
+                    # corner pieces (double line)
+                    if tile == "1":
+                        sprite.angle = 0
+                    elif tile == "2":
+                        sprite.angle = -90
+                    elif tile == "3":
+                        sprite.angle = 180
+                    elif tile == "4":
+                        sprite.angle = 90
+
+                    # corner pieces (single line)
+                    if tile == "5":
+                        sprite.angle = 0
+                    elif tile == "6":
+                        sprite.angle = -90
+                    elif tile == "7":
+                        sprite.angle = 180
+                    elif tile == "8":
+                        sprite.angle = 90
+
+                    self.wall_list.append(sprite)
+
+                elif tile == ".":
+                    self.pellet_sprite = Pellet("images/pellet.png", 0.05, self.window.width, self.window.height)
                     self.pellet_sprite.center_x = x
                     self.pellet_sprite.center_y = y
                     self.consumable_list.append(self.pellet_sprite)
 
-                # energizer
-                if tile == "-":
-                    self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.energizer_pellet_sprite.center_x = x
-                    self.energizer_pellet_sprite.center_y = y
-                    self.consumable_list.append(self.energizer_pellet_sprite)
+        # Set up Pac-Man
+        self.player_sprite = Controllable("images/pacman-static.png",
+                                          SPRITE_SCALING, self.window.width, self.window.height)
+        # self.player_sprite.center_x = 15
+        # self.player_sprite.center_y = 700
+        # self.controllable_list.append(self.player_sprite)
+        #
+        # # Pellet Map
+        # # - # is where you don't want pellet to be
+        # # - . is where you want pellet to be
+        # pellet_map = [
+        #     "####...-...g..#.........",
+        #     "####.###.####.#.####.##.",
+        #     "####.###.####.#.####.##.",
+        #     "####............m.......",
+        #     "####.###............###.",
+        #     "####.............-......",
+        #     "########.#..o.......####",
+        #     "########.#..........####",
+        #     "########.#..........####",
+        #     "########.#..-.......####",
+        #     "########.#.######.#.####",
+        #     "####.....s..............",
+        #     "####.###................",
+        #     "####.###............c...",
+        #     "####.###...-..#....k....",
+        #     "####.###......#.........",
+        #     "####..b.......#...a.....",
+        #     "########################",
+        # ]
 
-                # cherry
-                if tile == "c":
-                    self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.cherry_sprite.center_x = x
-                    self.cherry_sprite.center_y = y
-                    self.consumable_list.append(self.cherry_sprite)
-
-                # strawberry
-                if tile == "s":
-                    self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.strawberry_sprite.center_x = x
-                    self.strawberry_sprite.center_y = y
-                    self.consumable_list.append(self.strawberry_sprite)
-
-                # orange
-                if tile == "o":
-                    self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.orange_sprite.center_x = x
-                    self.orange_sprite.center_y = y
-                    self.consumable_list.append(self.orange_sprite)
-
-                # apple
-                if tile == "a":
-                    self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.apple_sprite.center_x = x
-                    self.apple_sprite.center_y = y
-                    self.consumable_list.append(self.apple_sprite)
-
-                # melon
-                if tile == "m":
-                    self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.melon_sprite.center_x = x
-                    self.melon_sprite.center_y = y
-                    self.consumable_list.append(self.melon_sprite)
-
-                # galaxian
-                if tile == "g":
-                    self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.galaxian_sprite.center_x = x
-                    self.galaxian_sprite.center_y = y
-                    self.consumable_list.append(self.galaxian_sprite)
-
-                # bell
-                if tile == "b":
-                    self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.bell_sprite.center_x = x
-                    self.bell_sprite.center_y = y
-                    self.consumable_list.append(self.bell_sprite)
+        #
+        # offset_x = TILE_SIZE // 2
+        # offset_y = TILE_SIZE // 2
+        #
+        # for row_index, row in enumerate(pellet_map):
+        #     for col_index, tile in enumerate(row):
+        #         x = col_index * TILE_SIZE + offset_x
+        #         y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
+        #
+        #         # small pellet
+        #         if tile == ".":
+        #             self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.pellet_sprite.center_x = x
+        #             self.pellet_sprite.center_y = y
+        #             self.consumable_list.append(self.pellet_sprite)
+        #
+        #         # energizer
+        #         if tile == "-":
+        #             self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.energizer_pellet_sprite.center_x = x
+        #             self.energizer_pellet_sprite.center_y = y
+        #             self.consumable_list.append(self.energizer_pellet_sprite)
+        #
+        #         # cherry
+        #         if tile == "c":
+        #             self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.cherry_sprite.center_x = x
+        #             self.cherry_sprite.center_y = y
+        #             self.consumable_list.append(self.cherry_sprite)
+        #
+        #         # strawberry
+        #         if tile == "s":
+        #             self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.strawberry_sprite.center_x = x
+        #             self.strawberry_sprite.center_y = y
+        #             self.consumable_list.append(self.strawberry_sprite)
+        #
+        #         # orange
+        #         if tile == "o":
+        #             self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.orange_sprite.center_x = x
+        #             self.orange_sprite.center_y = y
+        #             self.consumable_list.append(self.orange_sprite)
+        #
+        #         # apple
+        #         if tile == "a":
+        #             self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.apple_sprite.center_x = x
+        #             self.apple_sprite.center_y = y
+        #             self.consumable_list.append(self.apple_sprite)
+        #
+        #         # melon
+        #         if tile == "m":
+        #             self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.melon_sprite.center_x = x
+        #             self.melon_sprite.center_y = y
+        #             self.consumable_list.append(self.melon_sprite)
+        #
+        #         # galaxian
+        #         if tile == "g":
+        #             self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.galaxian_sprite.center_x = x
+        #             self.galaxian_sprite.center_y = y
+        #             self.consumable_list.append(self.galaxian_sprite)
+        #
+        #         # bell
+        #         if tile == "b":
+        #             self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #             self.bell_sprite.center_x = x
+        #             self.bell_sprite.center_y = y
+        #             self.consumable_list.append(self.bell_sprite)
 
                 # key
-                if tile == "k":
-                    self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
-                    self.key_sprite.center_x = x
-                    self.key_sprite.center_y = y
-                    self.consumable_list.append(self.key_sprite)
-
+                # if tile == "k":
+                #     self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                #     self.key_sprite.center_x = x
+                #     self.key_sprite.center_y = y
+                #     self.consumable_list.append(self.key_sprite)
 
     def on_draw(self):
         self.clear()
-
-        # margin between border = 15
-        # margin between path = 50, 45
-
-        # TODO: this could go in its own file eventually (maze class) which would clean up code
-        # BORDER GOING AROUND THE GAME
-        # Top border (top line)
-        arcade.draw_line(100, 600, 797, 600, arcade.color.BLUE, 4)
-        # Top border (bottom line, first half)
-        arcade.draw_line(115, 585, 455, 585, arcade.color.BLUE, 4)
-        # Top border (bottom line, second half)
-        arcade.draw_line(470, 585, 782, 585, arcade.color.BLUE, 4)
-        # Bottom border (bottom line)
-        arcade.draw_line(100, 5, 797, 5, arcade.color.BLUE, 4)
-        # Bottom border (top line, first half)
-        arcade.draw_line(115, 20, 455, 20, arcade.color.BLUE, 4)
-        # Bottom border (top line, second half)
-        arcade.draw_line(474, 20, 782, 20, arcade.color.BLUE, 4)
-
-        # Rectangle midway through border (left line)
-        arcade.draw_line(457, 487, 457, 587, arcade.color.BLUE, 4)
-        # Rectangle midway through border (bottom line)
-        arcade.draw_line(455, 485, 474, 485, arcade.color.BLUE, 4)
-        # Rectangle midway through border (right line)
-        arcade.draw_line(472, 485, 472, 587, arcade.color.BLUE, 4)
-
-        # Rectangle midway through border, mirrored to bottom
-        arcade.draw_line(457, 118, 457, 18, arcade.color.BLUE, 4)
-        arcade.draw_line(455, 116, 474, 116, arcade.color.BLUE, 4)
-        arcade.draw_line(472, 118, 472, 18, arcade.color.BLUE, 4)
-
-
-        # Left border (left line)
-        arcade.draw_line(100, 602, 100, 360, arcade.color.BLUE, 4)
-        # Left border (right line)
-        arcade.draw_line(115, 587, 115, 375, arcade.color.BLUE, 4)
-        # Right border (right line)
-        arcade.draw_line(795, 602, 795, 356, arcade.color.BLUE, 4)
-        # Right border (left line)
-        arcade.draw_line(780, 587, 780, 371, arcade.color.BLUE, 4)
-
-        # Left border - divit halfway through one side, top (top line)
-        arcade.draw_line(113, 373, 250, 373, arcade.color.BLUE, 4)
-        # Left border - divit halfway through one side, top (bottom line)
-        arcade.draw_line(98, 358, 235, 358, arcade.color.BLUE, 4)
-        # Left border - divit halfway through one side (vertical line, right)
-        arcade.draw_line(250, 326, 250, 375, arcade.color.BLUE, 4)
-        # Left border - divit halfway through one side (vertical line, left)
-        arcade.draw_line(235, 340, 235, 360, arcade.color.BLUE, 4)
-        # Left border - divit halfway through one side, bottom (top line)
-        arcade.draw_line(98, 342, 237, 342, arcade.color.BLUE, 4)
-        # Left border - divit halfway through one side, bottom (bottom line)
-        arcade.draw_line(98, 327, 252, 327, arcade.color.BLUE, 4)
-
-        # Left border, bottom - divit halfway through one side, top (top line)
-        arcade.draw_line(98, 277, 250, 277, arcade.color.BLUE, 4)
-        # Left border, bottom - divit halfway through one side, top (bottom line)
-        arcade.draw_line(98, 262, 235, 262, arcade.color.BLUE, 4)
-        # Left border, bottom - divit halfway through one side (vertical line, right)
-        arcade.draw_line(250, 230, 250, 279, arcade.color.BLUE, 4)
-        # Left border, bottom - divit halfway through one side (vertical line, left)
-        arcade.draw_line(235, 244, 235, 264, arcade.color.BLUE, 4)
-        # Left border, bottom - divit halfway through one side, bottom (top line)
-        arcade.draw_line(98, 244, 237, 244, arcade.color.BLUE, 4)
-        # Left border, bottom - divit halfway through one side, bottom (bottom line)
-        arcade.draw_line(113, 229, 252, 229, arcade.color.BLUE, 4)
-
-        # Left Border, under the last divit
-        # Left border (left line)
-        arcade.draw_line(100, 246, 100, 3, arcade.color.BLUE, 4)
-        # Left border (right line)
-        arcade.draw_line(115, 230, 115, 18, arcade.color.BLUE, 4)
-
-
-        # RECTANGLES THROUGHOUT THE BOARD
-        # Rectangle (top left)
-        arcade.draw_lrbt_rectangle_outline(170, 250, 490, 535, arcade.color.BLUE, 4)
-        # Rectangle (top left, second over)
-        arcade.draw_lrbt_rectangle_outline(295, 410, 490, 535, arcade.color.BLUE, 4)
-        # Rectangle (top left, below rectangle to the leftest)
-        arcade.draw_lrbt_rectangle_outline(170, 250, 423, 440, arcade.color.BLUE, 4)
-        # Rectangle (bottom, leftest most)
-        arcade.draw_lrbt_rectangle_outline(170, 250, 70, 184, arcade.color.BLUE, 4)
-
-
-
-        # Left divit (top)
-        arcade.draw_line(780, 373, 650, 373, arcade.color.BLUE, 4)
-        arcade.draw_line(795, 358, 900 - 235, 358, arcade.color.BLUE, 4)
-        arcade.draw_line(650, 326, 650, 375, arcade.color.BLUE, 4)
-        arcade.draw_line(665, 340, 900 - 235, 360, arcade.color.BLUE, 4)
-        arcade.draw_line(797, 342, 663, 342, arcade.color.BLUE, 4)
-        arcade.draw_line(797, 327, 648, 327, arcade.color.BLUE, 4)
-
-        # Left divit (bottom)
-        arcade.draw_line(797, 277, 650, 277, arcade.color.BLUE, 4)
-        arcade.draw_line(797, 262, 665, 262, arcade.color.BLUE, 4)
-        arcade.draw_line(650, 230, 650, 279, arcade.color.BLUE, 4)
-        arcade.draw_line(665, 244, 665, 264, arcade.color.BLUE, 4)
-        arcade.draw_line(795, 244, 663, 244, arcade.color.BLUE, 4)
-        arcade.draw_line(780, 229, 648, 229, arcade.color.BLUE, 4)
-
-        # Left border under the last divit
-        arcade.draw_line(795, 246, 795, 3, arcade.color.BLUE, 4)
-        arcade.draw_line(780, 230, 780, 18, arcade.color.BLUE, 4)
-
-        # Rectangle (top left → top right)
-        arcade.draw_lrbt_rectangle_outline(522, 637, 490, 535, arcade.color.BLUE, 4)
-        # Rectangle (second over → mirrored to left of right side)
-        arcade.draw_lrbt_rectangle_outline(682, 730, 490, 535, arcade.color.BLUE, 4)
-        # Rectangle (second over → mirrored to left of right side)
-        # Rectangle below first → mirrored
-        arcade.draw_lrbt_rectangle_outline(650, 730, 423, 440, arcade.color.BLUE, 4)
-
-        # ghost cage
-        # outer rectangle
-        arcade.draw_line(360, 240, 550, 240, arcade.color.BLUE, 4)
-
-        # Draw sprites
+        self.wall_list.draw()
         self.controllable_list.draw()
         self.consumable_list.draw()
 
@@ -369,8 +364,6 @@ class GameView(arcade.View):
             self.player_sprite.change_x = -MOVEMENT_SPEED
         elif self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
-
-
 
     def on_update(self, delta_time):
         """
@@ -390,9 +383,6 @@ class GameView(arcade.View):
             print(self.player_sprite.score)
         for sprite in self.consumable_list:
             sprite.update()
-
-    
-
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -417,8 +407,6 @@ class GameView(arcade.View):
         elif key == arcade.key.ESCAPE:
             self.esc_pressed = True
 
-
-
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
@@ -437,7 +425,6 @@ class GameView(arcade.View):
             self.update_player_speed()
         elif key == arcade.key.ESCAPE:
             self.esc_pressed = False
-
 
     def reset(self):
         """Reset the game to the initial state."""
@@ -463,11 +450,10 @@ class GameView(arcade.View):
         pass
 
 
-
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
-    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+    window = arcade.Window(WINDOW_WIDTH, 900, WINDOW_TITLE)
 
     # Create and setup the GameView
     game = GameView()
@@ -480,6 +466,6 @@ def main():
     arcade.run()
 
 
-
 if __name__ == "__main__":
     main()
+
