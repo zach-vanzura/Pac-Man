@@ -7,6 +7,7 @@ from controllable import Controllable
 from consumables.cherry import Cherry
 from consumables.galaxian import Galaxian
 from consumables.pellet_energizer import EnergizerPellet as Energizer
+from consumables.key import Key
 from consumables.melon import Melon
 from consumables.orange import Orange
 from consumables.pellet_small import Pellet
@@ -65,9 +66,6 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 5
 
-# Set fruit point values 
-KEY_VALUE = 5000
-
 # Set tile size
 TILE_SIZE = 32
 
@@ -103,7 +101,7 @@ class GameView(arcade.View):
         self.melon_sprite = None
         self.galaxian_sprite = None
         self.bell_sprite = None
-        # self.key_sprite = None
+        self.key_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -149,7 +147,7 @@ class GameView(arcade.View):
             "####.....s..............",
             "####.###................",
             "####.###............c...",
-            "####.###...-..#.........",
+            "####.###...-..#....k....",
             "####.###......#.........",
             "####..b.......#...a.....",
             "########################",
@@ -225,6 +223,13 @@ class GameView(arcade.View):
                     self.bell_sprite.center_x = x
                     self.bell_sprite.center_y = y
                     self.consumable_list.append(self.bell_sprite)
+
+                # key
+                if tile == "k":
+                    self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+                    self.key_sprite.center_x = x
+                    self.key_sprite.center_y = y
+                    self.consumable_list.append(self.key_sprite)
 
 
     def on_draw(self):
