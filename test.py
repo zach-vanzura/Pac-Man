@@ -103,7 +103,7 @@ class GameView(arcade.View):
         self.melon_sprite = None
         self.galaxian_sprite = None
         self.bell_sprite = None
-        # self.key_sprite = None
+        self.key_sprite = None
 
         # Track the current state of what key is pressed
         self.left_pressed = False
