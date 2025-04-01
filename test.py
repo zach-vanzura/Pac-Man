@@ -13,6 +13,10 @@ from consumables.orange import Orange
 from consumables.pellet_small import Pellet
 from consumables.strawberry import Strawberry
 
+from consumables import *
+from enum import Enum
+from tile import *
+
 """
 CS3050: Software Engineering
 Final Project -> Pac-Man inspired game
@@ -53,8 +57,8 @@ for now, 900px = 720px * 1.25
 
 # TODO: assign scaling to each sprite
 # Set scale of sprite
-SPRITE_SCALING = 0.025
-#SPRITE_SCALING = 0.013
+SPRITE_SCALING = 2
+# SPRITE_SCALING = 0.013
 
 # Set tile size
 TILE_SIZE = 20
@@ -70,6 +74,14 @@ MOVEMENT_SPEED = 5
 
 # Set fruit point values
 KEY_VALUE = 5000
+
+
+class Symbols(Enum):
+    PELLET = '.'
+    ENERGIZER = 'o'
+    EMPTY_SPACE = '#'
+
+
 
 
 class GameView(arcade.View):
@@ -124,72 +136,110 @@ class GameView(arcade.View):
         self.consumable_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
 
-        self.wall_map = [
+        self.tile_textures = [
             "############################",
             "############################",
             "############################",
-            "C============PP============4",
-            "S............||............S",
-            "S.*--+.*---+.##.*---+.*--+.S",
-            "So/##?./###?.##./###?./##?oS",
-            "S.&(().&((().##.&((().&(().S",
-            "S..........................S",
-            "S.L||L.LL.L||||||L.LL.L||L.S",
-            "S.L||L.||.L||LL||L.||.L||L.S",
-            "S......||....||....||......S",
-            "2====4.|L||L#||#L||L|.C====3",
-            "#####S.|L||L#LL#L||L|.S#####",
-            "#####S.||##########||.S#####",
-            "#####S.||#j==__==j#||.S#####",
-            "=====3.LL#=######=#LL.2=====",
+            "C============PP============C",
+            "=............||............=",
+            "=.L||L.L|||L.||.L|||L.L||L.=",
+            "=o|##|.|###|.||.|###|.|##|o=",
+            "=.L||L.L|||L.LL.L|||L.L||L.=",
+            "=..........................=",
+            "=.L||L.LL.L||||||L.LL.L||L.=",
+            "=.L||L.||.L||LL||L.||.L||L.=",
+            "=......||....||....||......=",
+            "C====L.|L||L#||#L||L|.L====C",
+            "#####=.|L||L#LL#L||L|.=#####",
+            "#####=.||##########||.=#####",
+            "#####=.||#j==__==j#||.=#####",
+            "=====L.LL#=######=#LL.L=====",
             "######.###=######=###.######",
-            "=====4.LL#=######=#LL.C=====",
-            "#####S.||#j======j#||.S#####",
-            "#####S.||##########||.S#####",
-            "#####S.||#L||||||L#||.S#####",
-            "C====3.LL#L||LL||L#LL.2====4",
-            "S............||............S",
-            "S.L||L.L|||L.||.L|||L.L||L.S",
-            "S.L|L|.L|||L.LL.L|||L.L||L.S",
-            "So..||.......##.......||..oS",
+            "=====L.LL#=######=#LL.L=====",
+            "#####=.||#j======j#||.=#####",
+            "#####=.||##########||.=#####",
+            "#####=.||#L||||||L#||.=#####",
+            "C====L.LL#L||LL||L#LL.L====C",
+            "=............||............=",
+            "=.L||L.L|||L.||.L|||L.L||L.=",
+            "=.L|L|.L|||L.LL.L|||L.L||L.=",
+            "=o..||.......##.......||..o=",
             "H|L.||.LL.L||||||L.LL.||.L|H",
             "H|L.LL.||.L||LL||L.||.LL.L|H",
-            "S......||....||....||......S",
-            "S.L||||LL||L.||.L||LL||||L.S",
-            "S..........................S",
-            "2==========================3",
+            "=......||....||....||......=",
+            "=.L||||LL||L.||.L||LL||||L.=",
+            "=..........................=",
+            "C==========================C",
+            "############################",
+            "############################"
+        ]
+
+        self.tile_orientations = [
             "############################",
             "############################",
+            "############################",
+            "y============0y============0",
+            "T............TT............T",
+            "T.y000.y0000.TT.y0000.y000.T",
+            "ToT##T.T###T.TT.T###T.T##ToT",
+            "T.z00x.z000x.zx.z000x.z00x.T",
+            "T..........................T",
+            "T.y000.y0.y0000000.y0.y000.T",
+            "T.z00x.TT.z000y00x.TT.z00x.T",
+            "T......TT....TT....TT......T",
+            "zxxxx0.Tz000#TT#y00xT.yxxxxx",
+            "#####T.Ty00x#zx#zTT0T.T#####",
+            "#####T.TT##########TT.T#####",
+            "#####T.TT#y0000000#TT.T#####",
+            "00000x.zx#T######T#zx.z00000",
+            "######.###T######T###.######",
+            "xxxxx0.y0#T######T#y0.yxxxxx",
+            "#####T.TT#z000000x#TT.T#####",
+            "#####T.TT##########TT.T#####",
+            "#####T.TT#y0000000#TT.T#####",
+            "y0000x.zx#z000y00x#zx.z00000",
+            "T............TT............T",
+            "T.y000.y0000.TT.y0000.y000.T",
+            "T.z00T.z000x.zy.z000y.Ty0x.T",
+            "To..TT.......##.......TT..oT",
+            "z00.TT.y0.y0000000.y0.TT.y0x",
+            "y0x.zx.TT.z000y00x.TT.zx.z00",
+            "T......TT....TT....TT......T",
+            "T.y0000xz000.TT.y00xz00000.T",
+            "T.z00000000x.zx.z00000000x.T",
+            "T..........................T",
+            "z==========================x",
+            "############################",
+            "############################"
         ]
 
         # Set window height dynamically based on the map
         self.map_height = len(self.wall_map)
         self.window.set_size(WINDOW_WIDTH, self.map_height * TILE_SIZE)
 
-        # Map of characters to wall textures
-        tile_textures = {
-            "C": arcade.load_texture("images/corner.png"),
-            "=": arcade.load_texture("images/straight-piece.png"),
-            "S": arcade.load_texture("images/vertical-piece.png"),
-            "L": arcade.load_texture("images/single-line-corner.png"),
-            "*": arcade.load_texture("images/single-line-corner.png"),
-            "-": arcade.load_texture("images/straight-single-line.png"),
-            "/": arcade.load_texture("images/vertical-single-line.png"),
-            "?": arcade.load_texture("images/vertical-right-single-line.png"),
-            "+": arcade.load_texture("images/corner-single-right.png"),
-            "(": arcade.load_texture("images/bottom-single-line.png"),
-            ")": arcade.load_texture("images/bottom-right-single-corner.png"),
-            "&": arcade.load_texture("images/bottom-left-corner-single.png"),
-            "1": arcade.load_texture("images/corner.png"),
-            "2": arcade.load_texture("images/corner.png"),
-            "3": arcade.load_texture("images/corner.png"),
-            "4": arcade.load_texture("images/corner.png"),
-            "5": arcade.load_texture("images/single-line-corner.png"),
-            "6": arcade.load_texture("images/single-line-corner.png"),
-            "7": arcade.load_texture("images/single-line-corner.png"),
-            "8": arcade.load_texture("images/single-line-corner.png"),
+        # go through the two lists to get each tile texture and orientation
+        for row in (range(len(self.tile_textures))):
+            x_pos = 0
+            for col in (range(len(self.tile_textures[0]))):
+                # is pellet
+                if self.tile_textures[row][col] == Symbols.PELLET.value:
+                    # increment x, y pos
+                    pass
+                # is energizer
+                elif self.tile_textures[row][col] == Symbols.ENERGIZER.value:
+                    # increment x, y pos still
+                    pass
+                # is empty space
+                elif self.tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
+                    # increment x, y but do nothing
+                    pass
 
-        }
+                center_x, center_y = TILE_SIZE // 2
+                x_pos, y_pos = center_x + TILE_SIZE, center_y + TILE_SIZE
+                tile = Tile(x_pos, y_pos, self.tile_textures[row][col], self.tile_orientations[row][col])
+                self.wall_list.append(tile)
+
+
 
         offset_x = TILE_SIZE // 2
         offset_y = TILE_SIZE // 2
@@ -338,12 +388,12 @@ class GameView(arcade.View):
         #             self.bell_sprite.center_y = y
         #             self.consumable_list.append(self.bell_sprite)
 
-                # key
-                # if tile == "k":
-                #     self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
-                #     self.key_sprite.center_x = x
-                #     self.key_sprite.center_y = y
-                #     self.consumable_list.append(self.key_sprite)
+        # key
+        # if tile == "k":
+        #     self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
+        #     self.key_sprite.center_x = x
+        #     self.key_sprite.center_y = y
+        #     self.consumable_list.append(self.key_sprite)
 
     def on_draw(self):
         self.clear()
@@ -468,4 +518,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
