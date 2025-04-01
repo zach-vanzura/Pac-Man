@@ -47,11 +47,11 @@ def orient_image(image: str, operator: str) -> arcade.Texture:
 
     # note: the Texture constructor may require a name attribute... the docs online say it does
     # but the docs on python say that it DOES NOT...
-    return arcade.Texture(image)
+    return arcade.Texture(image, hit_box_algorithm=arcade.hitbox.PymunkHitBoxAlgorithm(detail=1))
 
 
 class Tile(arcade.Sprite):
-    def __init__(self, center_x, center_y, texture: str, orientation: str):
+    def __init__(self, tile_size, center_x, center_y, texture: str, orientation: str):
         """
         creates a tile object that extends the sprite class in arcade. This class is used to simplify the maze-making
         process by dissecting the maze into evenly sized tiles. There are ~8 unique tile types in the classic pac man
@@ -63,12 +63,15 @@ class Tile(arcade.Sprite):
         :param orientation: a character that is used to determine how to manipulate the image's orientation
         """
 
+        self.image = None
         self.image_path = os.path.join('images', 'tiles', TEXTURES[texture])
+        self.original_size = 768  # original scale of the image
+        self.scale = tile_size / self.original_size
 
         # by checking the orientation, we know how to manipulate the image
         if orientation != Orientations.NO_CHANGE.value:
-            name = TEXTURES[texture][0:-4]  # remove the '.png' from the string
             self.image = orient_image(self.image_path, orientation)
+        else:
+            self.image = self.image_path
 
-        # todo: change scale to be consistent for window
-        super().__init__(self.image, 1, center_x, center_y, hit_box_algorithm='Detailed')
+        super().__init__(self.image, self.scale, center_x, center_y)

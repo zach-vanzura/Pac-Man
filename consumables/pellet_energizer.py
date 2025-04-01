@@ -3,12 +3,14 @@ Energizer pellet class, the class inherits all methods from the Consumable class
 specify typing
 """
 
-from consumable import Consumable
+from consumables.pellet_small import Pellet
+import os
 
 
 # TODO: There may need to be more functionality in here based on interactions with pac-man and the ghosts
-class EnergizerPellet(Consumable):
-    def __init__(self, path_to_sprite, scale, window_width, window_height):
+class EnergizerPellet(Pellet):
+    def __init__(self, window_width, window_height):
+        self.scale =
         super().__init__(path_to_sprite, scale, window_width, window_height)
         self.score = 50
 
