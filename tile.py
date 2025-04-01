@@ -71,4 +71,4 @@ class Tile(arcade.Sprite):
             self.image = orient_image(self.image_path, orientation)
 
         # todo: change scale to be consistent for window
-        super().__init__(self.image, 1, center_x, center_y)
+        super().__init__(self.image, 1, center_x, center_y, hit_box_algorithm='Detailed')
