@@ -17,8 +17,8 @@ KEY:
 - . represents a pellet
 - o represents an energizer pellet
 
-- | represents a SINGLE wall (in the middle of the tile)
-- = represents a DOUBLE wall (one line in the middle and one on the border) used for borders
+- | represents a SINGLE wall (in the middle of the tile) parallel to x axis
+- = represents a DOUBLE wall (one line in the middle and one on the border) used for borders (also parallel)
 - _ represents the WALL for the GHOSTS (which cannot be passed through by pacman but can be passed through by ghosts)
 
 - L represents a SINGLE ELBOW
