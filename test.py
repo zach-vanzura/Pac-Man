@@ -39,20 +39,14 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 - Ashton
 """
 
-"""
-Pac-Man and other arcade games use a 5:4 window ratio
-pixel width = pixel height * 1.25
-for now, 900px = 720px * 1.25
-"""
 
 # TODO: create mazes, create start menu screen, add animations, add enemy sprites,
-# add pellets, add fruit, add power-ups, add score tracking, add high-score tracking,
 # add enemy movement and attacking, add settings menu, add alternative sprites (Jason's face),
 # add various menus/start screens/end screens (look up what is actually in pacman),
 # etc...
 
 # Set tile size, window height and width
-TILE_SIZE = 16
+TILE_SIZE = 24
 WINDOW_WIDTH = 28 * TILE_SIZE  # 28 columns
 WINDOW_HEIGHT = 36 * TILE_SIZE  # 36 rows
 
@@ -61,6 +55,90 @@ WINDOW_TITLE = "PAC-MAN"
 
 # Set player movement speed
 MOVEMENT_SPEED = 5
+
+class Symbols(Enum):
+    PELLET = '.'
+    ENERGIZER = 'o'
+    EMPTY_SPACE = '#'
+
+
+tile_textures = [
+    "############################",
+    "############################",
+    "############################",
+    "C============PP============C",
+    "=............||............=",
+    "=.L||L.L|||L.||.L|||L.L||L.=",
+    "=o|##|.|###|.||.|###|.|##|o=",
+    "=.L||L.L|||L.LL.L|||L.L||L.=",
+    "=..........................=",
+    "=.L||L.LL.L||||||L.LL.L||L.=",
+    "=.L||L.||.L||LL||L.||.L||L.=",
+    "=......||....||....||......=",
+    "C====L.|L||L#||#L||L|.L====C",
+    "#####=.|L||L#LL#L||L|.=#####",
+    "#####=.||##########||.=#####",
+    "#####=.||#j==__==j#||.=#####",
+    "=====L.LL#=######=#LL.L=====",
+    "######.###=######=###.######",
+    "=====L.LL#=######=#LL.L=====",
+    "#####=.||#j======j#||.=#####",
+    "#####=.||##########||.=#####",
+    "#####=.||#L||||||L#||.=#####",
+    "C====L.LL#L||LL||L#LL.L====C",
+    "=............||............=",
+    "=.L||L.L|||L.||.L|||L.L||L.=",
+    "=.L|L|.L|||L.LL.L|||L.|L|L.=",
+    "=o..||.......##.......||..o=",
+    "H|L.||.LL.L||||||L.LL.||.L|H",
+    "H|L.LL.||.L||LL||L.||.LL.L|H",
+    "=......||....||....||......=",
+    "=.L||||LL||L.||.L||LL||||L.=",
+    "=.L||||||||L.LL.L||||||||L.=",
+    "=..........................=",
+    "C==========================C",
+    "############################",
+    "############################",
+]
+
+tile_orientations = [
+    "############################",
+    "############################",
+    "############################",
+    "y0000000000000y0000000000000",
+    "Y............TT............T",
+    "Y.y000.y0000.TT.y0000.y000.T",
+    "YoT##T.T###T.TT.T###T.T##ToT",
+    "Y.z00x.z000x.zx.z000x.z00x.T",
+    "Y..........................T",
+    "Y.y000.y0.y0000000.y0.y000.T",
+    "Y.z00x.TT.z000y00x.TT.z00x.T",
+    "Y......TT....TT....TT......T",
+    "zxxxx0.Tz000#TT#y00xT.yxxxxx",
+    "#####Y.Ty00x#zx#z000T.T#####",
+    "#####Y.TT##########TT.T#####",
+    "#####Y.TT#yxx00xx0#TT.T#####",
+    "00000x.zx#T######Y#zx.z00000",
+    "######.###T######Y###.######",
+    "xxxxx0.y0#T######Y#y0.yxxxxx",
+    "#####Y.TT#z000000x#TT.T#####",
+    "#####Y.TT##########TT.T#####",
+    "#####Y.TT#y0000000#TT.T#####",
+    "y0000x.zx#z000y00x#zx.z00000",
+    "Y............TT............T",
+    "Y.y000.y0000.TT.y0000.y000.T",
+    "Y.z00T.z000x.zx.z000x.Ty0x.T",
+    "Yo..TT.......##.......TT..oT",
+    "z00.TT.y0.y0000000.y0.TT.y0x",
+    "y0x.zx.TT.z000y00x.TT.zx.z00",
+    "Y......TT....TT....TT......T",
+    "Y.y0000xz000.TT.y00xz00000.T",
+    "Y.z00000000x.zx.z00000000x.T",
+    "Y..........................T",
+    "zxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "############################",
+    "############################",
+]
 
 class GameView(arcade.View):
     """
