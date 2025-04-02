@@ -181,10 +181,10 @@ class GameView(arcade.View):
         # and set them to None
 
     def setup(self):
-        self.controllable_list = arcade.SpriteList()
-        # self.consumable_list = arcade.SpriteList()
+        self.consumable_list = arcade.SpriteList()
         self.tile_list = arcade.SpriteList()
 
+        self.controllable_list = arcade.SpriteList()
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9.5  # 10 is the y midpoint in the grid
@@ -198,13 +198,13 @@ class GameView(arcade.View):
                 # is pellet
                 if tile_textures[row][col] == Symbols.PELLET.value:
                     self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
-                    self.tile_list.append(self.tile_sprite)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
+                    self.consumable_list.append(self.tile_sprite)
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
                     self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
-                    self.tile_list.append(self.tile_sprite)
+                    self.consumable_list.append(self.tile_sprite)
                 # is empty space
                 elif tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
                     center_x += TILE_SIZE
@@ -218,85 +218,10 @@ class GameView(arcade.View):
             center_y -= TILE_SIZE  # increment y position at each level
 
 
-        # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
-        #
-        # for row_index, row in enumerate(pellet_map):
-        #     for col_index, tile in enumerate(row):
-        #         x = col_index * TILE_SIZE + offset_x
-        #         y = (len(pellet_map) - row_index - 1) * TILE_SIZE + offset_y
-        #
-        #         # small pellet
-        #         if tile == ".":
-        #             self.pellet_sprite = Pellet("images/pellet.png", 0.05, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.pellet_sprite.center_x = x
-        #             self.pellet_sprite.center_y = y
-        #             self.consumable_list.append(self.pellet_sprite)
-        #
-        #         # energizer
-        #         if tile == "-":
-        #             self.energizer_pellet_sprite = Energizer("images/pellet.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.energizer_pellet_sprite.center_x = x
-        #             self.energizer_pellet_sprite.center_y = y
-        #             self.consumable_list.append(self.energizer_pellet_sprite)
-        #
-        #         # cherry
-        #         if tile == "c":
-        #             self.cherry_sprite = Cherry("images/cherry.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.cherry_sprite.center_x = x
-        #             self.cherry_sprite.center_y = y
-        #             self.consumable_list.append(self.cherry_sprite)
-        #
-        #         # strawberry
-        #         if tile == "s":
-        #             self.strawberry_sprite = Strawberry("images/strawberry.png", 0.09, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.strawberry_sprite.center_x = x
-        #             self.strawberry_sprite.center_y = y
-        #             self.consumable_list.append(self.strawberry_sprite)
-        #
-        #         # orange
-        #         if tile == "o":
-        #             self.orange_sprite = Orange("images/orange.png", 0.07, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.orange_sprite.center_x = x
-        #             self.orange_sprite.center_y = y
-        #             self.consumable_list.append(self.orange_sprite)
-        #
-        #         # apple
-        #         if tile == "a":
-        #             self.apple_sprite = Apple("images/apple.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.apple_sprite.center_x = x
-        #             self.apple_sprite.center_y = y
-        #             self.consumable_list.append(self.apple_sprite)
-        #
-        #         # melon
-        #         if tile == "m":
-        #             self.melon_sprite = Melon("images/melon.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.melon_sprite.center_x = x
-        #             self.melon_sprite.center_y = y
-        #             self.consumable_list.append(self.melon_sprite)
-        #
-        #         # galaxian
-        #         if tile == "g":
-        #             self.galaxian_sprite = Galaxian("images/galaxian.png", 0.1, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.galaxian_sprite.center_x = x
-        #             self.galaxian_sprite.center_y = y
-        #             self.consumable_list.append(self.galaxian_sprite)
-        #
-        #         # bell
-        #         if tile == "b":
-        #             self.bell_sprite = Bell("images/bell.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
-        #             self.bell_sprite.center_x = x
-        #             self.bell_sprite.center_y = y
-        #             self.consumable_list.append(self.bell_sprite)
-
-                # key
-                # if tile == "k":
-                #     self.key_sprite = Key("images/key.png", 0.08, WINDOW_WIDTH, WINDOW_HEIGHT)
-                #     self.key_sprite.center_x = x
-                #     self.key_sprite.center_y = y
-                #     self.consumable_list.append(self.key_sprite)
-
+    # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
     def on_draw(self):
         self.clear()
+        self.consumable_list.draw()
         self.tile_list.draw()
         self.controllable_list.draw()
 
@@ -323,19 +248,18 @@ class GameView(arcade.View):
         self.tile_list.update()
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
-        self.collisions = self.player_sprite.collides_with_list(self.tile_list)
+        self.collisions = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.collisions:
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
             # fixme: this does NOT work as intended
-            if not sprite.is_edible:
-                self.player_sprite.change_x = self.player_sprite.center_x - self.player_sprite.change_x
-                self.player_sprite.change_y = self.player_sprite.center_y - self.player_sprite.change_y
-
+            # if not sprite.is_edible:
+            #     self.player_sprite.change_x = self.player_sprite.center_x - self.player_sprite.change_x
+            #     self.player_sprite.change_y = self.player_sprite.center_y - self.player_sprite.change_y
 
             print(self.player_sprite.score)
-        for sprite in self.tile_list:
+        for sprite in self.consumable_list:
             sprite.update()
 
     def on_key_press(self, key, key_modifiers):
