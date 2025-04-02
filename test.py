@@ -156,6 +156,7 @@ class GameView(arcade.View):
         super().__init__()
 
         # Variables that will hold sprite lists
+        self.collisions = None
         self.controllable_list = None
         self.tile_list = None
         self.to_be_eaten = None
@@ -181,7 +182,7 @@ class GameView(arcade.View):
 
     def setup(self):
         self.controllable_list = arcade.SpriteList()
-        self.consumable_list = arcade.SpriteList()
+        # self.consumable_list = arcade.SpriteList()
         self.tile_list = arcade.SpriteList()
 
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
@@ -197,8 +198,8 @@ class GameView(arcade.View):
                 # is pellet
                 if tile_textures[row][col] == Symbols.PELLET.value:
                     self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
-                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
                     self.tile_list.append(self.tile_sprite)
+                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
                     self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -298,7 +299,6 @@ class GameView(arcade.View):
         self.clear()
         self.tile_list.draw()
         self.controllable_list.draw()
-        self.consumable_list.draw()
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -320,17 +320,17 @@ class GameView(arcade.View):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        self.tile_list.update()
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
-        self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
+        self.collisions = self.player_sprite.collides_with_list(self.tile_list)
         for sprite in self.to_be_eaten:
-            sprite.set_eaten()
-            self.player_sprite.score += sprite.score
+            if sprite.is_edible:
+                sprite.set_eaten()
+                self.player_sprite.score += sprite.score
 
-            # elif sprite == self.key_sprite:
-            #     self.player_sprite.score += KEY_VALUE
             print(self.player_sprite.score)
-        for sprite in self.consumable_list:
+        for sprite in self.tile_list:
             sprite.update()
 
     def on_key_press(self, key, key_modifiers):

@@ -87,6 +87,7 @@ class Tile(arcade.Sprite):
         self.image_path = os.path.join('images', 'tiles', TEXTURES[texture])
         self.original_size = 768  # original scale of the image
         self.scale_factor = tile_size / self.original_size
+        self.is_edible = False
 
         # by checking the orientation, we know how to manipulate the image
         if orientation != Orientations.NO_CHANGE.value:
