@@ -4,6 +4,7 @@ import arcade
 
 from consumables.pellet_small import Pellet
 from consumables.pellet_energizer import EnergizerPellet as Energizer
+from controllable import *
 from tile import *
 
 # --- Constants ---
@@ -105,11 +106,12 @@ class MyGame(arcade.Window):
 
         # Variables that will hold sprite lists
         self.tile_list = None
+        self.controllable_list = None
 
-        # Set up the player info
+        self.pacman_sprite = None
         self.tile_sprite = None
 
-        # Don't show the mouse cursor
+        # show the mouse cursor
         self.set_mouse_visible(True)
 
         arcade.set_background_color(arcade.color.BLACK)
@@ -118,6 +120,9 @@ class MyGame(arcade.Window):
         """ Set up the game and initialize the variables. """
 
         self.tile_list = arcade.SpriteList()
+        self.controllable_list = arcade.SpriteList()
+        self.pacman_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+        self.controllable_list.append(self.pacman_sprite)
 
         # go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
@@ -151,6 +156,7 @@ class MyGame(arcade.Window):
     def on_draw(self):
         """ Draw everything """
         self.clear()
+        self.controllable_list.draw()
         self.tile_list.draw()
         self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness=2)
 
