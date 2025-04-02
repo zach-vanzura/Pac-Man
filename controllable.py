@@ -10,6 +10,7 @@ Group Members:
 """
 
 import arcade
+from PIL import Image
 
 """
 This is the super class for all things controllable in Pac Man: The Player, The Ghosts, **maybe** some walls, 
@@ -18,15 +19,14 @@ This is the super class for all things controllable in Pac Man: The Player, The 
 
 class Controllable(arcade.Sprite):
     # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
-    def __init__(self, path_to_sprite, scale, window_width, window_height, ):
-        super().__init__(path_to_sprite, scale=scale)
-        self.center_x = window_width / 2
-        self.center_y = window_height / 2
-        self.window_width, self.window_height = window_width, window_height
+    def __init__(self, path_to_sprite, tile_size):
+        self.image = Image.open(path_to_sprite)
+        self.original_size = self.image.width
+        self.scale_factor = tile_size / self.original_size
+        super().__init__(path_to_sprite, 1.5 * self.scale_factor)
+        self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
-
-
 
     def update(self, delta_time: float = 1 / 60):
         """ Move the Player Sprite """
