@@ -13,6 +13,6 @@ class Pellet(Consumable):
         self.path_to_sprite = os.path.join('images', 'pellet.png')
         self.original_size = 154
         self.scale_factor = (tile_size / self.original_size) * 0.5
-        super().__init__(self.path_to_sprite, self.scale_factor)
+        super().__init__(self.path_to_sprite, self.scale_factor, window_width, window_height)
         self.score = 10
 

@@ -217,12 +217,6 @@ class GameView(arcade.View):
             center_y -= TILE_SIZE  # increment y position at each level
 
 
-        # TODO: add textures and orientations maps
-
-        # TODO: set up pacman
-
-        # TODO: add loops to generate tiles
-
         # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
         #
         # for row_index, row in enumerate(pellet_map):
@@ -302,7 +296,7 @@ class GameView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        self.wall_list.draw()
+        self.tile_list.draw()
         self.controllable_list.draw()
         self.consumable_list.draw()
 
