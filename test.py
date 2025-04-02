@@ -12,6 +12,7 @@ from consumables.melon import Melon
 from consumables.orange import Orange
 from consumables.pellet_small import Pellet
 from consumables.strawberry import Strawberry
+from tile import *
 
 """
 CS3050: Software Engineering
