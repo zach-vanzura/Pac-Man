@@ -324,10 +324,15 @@ class GameView(arcade.View):
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
         self.collisions = self.player_sprite.collides_with_list(self.tile_list)
-        for sprite in self.to_be_eaten:
+        for sprite in self.collisions:
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
+            # fixme: this does NOT work as intended
+            if not sprite.is_edible:
+                self.player_sprite.change_x = self.player_sprite.center_x - self.player_sprite.change_x
+                self.player_sprite.change_y = self.player_sprite.center_y - self.player_sprite.change_y
+
 
             print(self.player_sprite.score)
         for sprite in self.tile_list:
