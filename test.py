@@ -50,27 +50,16 @@ for now, 900px = 720px * 1.25
 # add various menus/start screens/end screens (look up what is actually in pacman),
 # etc...
 
-
-# TODO: assign scaling to each sprite
-# Set scale of sprite
-SPRITE_SCALING = 0.025
-#SPRITE_SCALING = 0.013
-
-# Set tile size
-TILE_SIZE = 20
-
-# Set window height and width in 5:4 ratio
+# Set tile size, window height and width
+TILE_SIZE = 16
 WINDOW_WIDTH = 28 * TILE_SIZE  # 28 columns
+WINDOW_HEIGHT = 36 * TILE_SIZE  # 36 rows
 
 # Set window title
 WINDOW_TITLE = "PAC-MAN"
 
 # Set player movement speed
 MOVEMENT_SPEED = 5
-
-# Set fruit point values
-KEY_VALUE = 5000
-
 
 class GameView(arcade.View):
     """
@@ -89,21 +78,13 @@ class GameView(arcade.View):
 
         # Variables that will hold sprite lists
         self.controllable_list = None
-        self.consumable_list = None
+        self.tile_list = None
         self.to_be_eaten = None
 
         # Set up the player info
         self.player_sprite = None
-        self.pellet_sprite = None
-        self.energizer_pellet_sprite = None
-        self.cherry_sprite = None
-        self.strawberry_sprite = None
-        self.orange_sprite = None
-        self.apple_sprite = None
-        self.melon_sprite = None
-        self.galaxian_sprite = None
-        self.bell_sprite = None
-        self.key_sprite = None
+        self.tile_sprite = None  # pellets wil be added to the tile sprite list
+        self.consumable_sprite = None  # we probably don't need sprites for every fruit
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -124,120 +105,14 @@ class GameView(arcade.View):
         self.consumable_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
 
-        self.wall_map = [
-            "############################",
-            "############################",
-            "############################",
-            "C============PP============4",
-            "S............||............S",
-            "S.*--+.*---+.##.*---+.*--+.S",
-            "So/##?./###?.##./###?./##?oS",
-            "S.&(().&((().##.&((().&(().S",
-            "S..........................S",
-            "S.L||L.LL.L||||||L.LL.L||L.S",
-            "S.L||L.||.L||LL||L.||.L||L.S",
-            "S......||....||....||......S",
-            "2====4.|L||L#||#L||L|.C====3",
-            "#####S.|L||L#LL#L||L|.S#####",
-            "#####S.||##########||.S#####",
-            "#####S.||#j==__==j#||.S#####",
-            "=====3.LL#=######=#LL.2=====",
-            "######.###=######=###.######",
-            "=====4.LL#=######=#LL.C=====",
-            "#####S.||#j======j#||.S#####",
-            "#####S.||##########||.S#####",
-            "#####S.||#L||||||L#||.S#####",
-            "C====3.LL#L||LL||L#LL.2====4",
-            "S............||............S",
-            "S.L||L.L|||L.||.L|||L.L||L.S",
-            "S.L|L|.L|||L.LL.L|||L.L||L.S",
-            "So..||.......##.......||..oS",
-            "H|L.||.LL.L||||||L.LL.||.L|H",
-            "H|L.LL.||.L||LL||L.||.LL.L|H",
-            "S......||....||....||......S",
-            "S.L||||LL||L.||.L||LL||||L.S",
-            "S..........................S",
-            "2==========================3",
-            "############################",
-            "############################",
-        ]
 
-        # Set window height dynamically based on the map
-        self.map_height = len(self.wall_map)
-        self.window.set_size(WINDOW_WIDTH, self.map_height * TILE_SIZE)
+        # TODO: add textures and orientations maps
 
-        # Map of characters to wall textures
-        tile_textures = {
-            "C": arcade.load_texture("images/corner.png"),
-            "=": arcade.load_texture("images/straight-piece.png"),
-            "S": arcade.load_texture("images/vertical-piece.png"),
-            "L": arcade.load_texture("images/single-line-corner.png"),
-            "*": arcade.load_texture("images/single-line-corner.png"),
-            "-": arcade.load_texture("images/straight-single-line.png"),
-            "/": arcade.load_texture("images/vertical-single-line.png"),
-            "?": arcade.load_texture("images/vertical-right-single-line.png"),
-            "+": arcade.load_texture("images/corner-single-right.png"),
-            "(": arcade.load_texture("images/bottom-single-line.png"),
-            ")": arcade.load_texture("images/bottom-right-single-corner.png"),
-            "&": arcade.load_texture("images/bottom-left-corner-single.png"),
-            "1": arcade.load_texture("images/corner.png"),
-            "2": arcade.load_texture("images/corner.png"),
-            "3": arcade.load_texture("images/corner.png"),
-            "4": arcade.load_texture("images/corner.png"),
-            "5": arcade.load_texture("images/single-line-corner.png"),
-            "6": arcade.load_texture("images/single-line-corner.png"),
-            "7": arcade.load_texture("images/single-line-corner.png"),
-            "8": arcade.load_texture("images/single-line-corner.png"),
+        # TODO: set up pacman
 
-        }
+        # TODO: add loops to generate tiles
 
-        offset_x = TILE_SIZE // 2
-        offset_y = TILE_SIZE // 2
-        map_height = self.map_height
 
-        # Build wall tiles using same logic as pellets
-        for row_index, row in enumerate(self.wall_map):
-            for col_index, tile in enumerate(row):
-                x = col_index * TILE_SIZE + offset_x
-                y = (map_height - row_index - 1) * TILE_SIZE + offset_y
-
-                if tile in tile_textures:
-                    sprite = arcade.Sprite()
-                    sprite.texture = tile_textures[tile]
-                    sprite.center_x = x
-                    sprite.center_y = y
-
-                    # corner pieces (double line)
-                    if tile == "1":
-                        sprite.angle = 0
-                    elif tile == "2":
-                        sprite.angle = -90
-                    elif tile == "3":
-                        sprite.angle = 180
-                    elif tile == "4":
-                        sprite.angle = 90
-
-                    # corner pieces (single line)
-                    if tile == "5":
-                        sprite.angle = 0
-                    elif tile == "6":
-                        sprite.angle = -90
-                    elif tile == "7":
-                        sprite.angle = 180
-                    elif tile == "8":
-                        sprite.angle = 90
-
-                    self.wall_list.append(sprite)
-
-                elif tile == ".":
-                    self.pellet_sprite = Pellet("images/pellet.png", 0.05, self.window.width, self.window.height)
-                    self.pellet_sprite.center_x = x
-                    self.pellet_sprite.center_y = y
-                    self.consumable_list.append(self.pellet_sprite)
-
-        # Set up Pac-Man
-        self.player_sprite = Controllable("images/pacman-static.png",
-                                          SPRITE_SCALING, self.window.width, self.window.height)
         # self.player_sprite.center_x = 15
         # self.player_sprite.center_y = 700
         # self.controllable_list.append(self.player_sprite)
@@ -266,6 +141,7 @@ class GameView(arcade.View):
         #     "########################",
         # ]
 
+        # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
         #
         # offset_x = TILE_SIZE // 2
         # offset_y = TILE_SIZE // 2
@@ -407,6 +283,7 @@ class GameView(arcade.View):
         elif key == arcade.key.ESCAPE:
             self.esc_pressed = True
 
+    # TODO: CHANGE LOGIC SO PACMAN CONTINUES MOVING IN THE DIRECTION OF A KEY PRESS EVEN AFTER RELEASE
     def on_key_release(self, key, key_modifiers):
         """
         Called whenever the user lets off a previously pressed key.
@@ -431,29 +308,11 @@ class GameView(arcade.View):
         # Do changes needed to restart the game here if you want to support that
         pass
 
-    def on_mouse_motion(self, x, y, delta_x, delta_y):
-        """
-        Called whenever the mouse moves.
-        """
-        pass
-
-    def on_mouse_press(self, x, y, button, key_modifiers):
-        """
-        Called when the user presses a mouse button.
-        """
-        pass
-
-    def on_mouse_release(self, x, y, button, key_modifiers):
-        """
-        Called when a user releases a mouse button.
-        """
-        pass
-
 
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
-    window = arcade.Window(WINDOW_WIDTH, 900, WINDOW_TITLE)
+    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
 
     # Create and setup the GameView
     game = GameView()
