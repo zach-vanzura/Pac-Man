@@ -47,8 +47,8 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 
 # Set tile size, window height and width
 TILE_SIZE = 24
-WINDOW_WIDTH = 28 * TILE_SIZE  # 28 columns
-WINDOW_HEIGHT = 36 * TILE_SIZE  # 36 rows
+SCREEN_WIDTH = 28 * TILE_SIZE  # 28 columns
+SCREEN_HEIGHT = 36 * TILE_SIZE  # 36 rows
 
 # Set window title
 WINDOW_TITLE = "PAC-MAN"
@@ -182,7 +182,39 @@ class GameView(arcade.View):
     def setup(self):
         self.controllable_list = arcade.SpriteList()
         self.consumable_list = arcade.SpriteList()
-        self.wall_list = arcade.SpriteList()
+        self.tile_list = arcade.SpriteList()
+
+        self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+        self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
+        self.player_sprite.center_y = TILE_SIZE * 9.5  # 10 is the y midpoint in the grid
+        self.controllable_list.append(self.player_sprite)
+
+        # go through the two lists to get each tile texture and orientation
+        center_y = SCREEN_HEIGHT - TILE_SIZE // 2
+        for row in (range(len(tile_textures))):  # iterate over y-axis
+            center_x = TILE_SIZE // 2  # reset x pos
+            for col in (range(len(tile_textures[0]))):  # iterate over x-axis
+                # is pellet
+                if tile_textures[row][col] == Symbols.PELLET.value:
+                    self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
+                    self.tile_list.append(self.tile_sprite)
+                # is energizer
+                elif tile_textures[row][col] == Symbols.ENERGIZER.value:
+                    self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
+                    self.tile_list.append(self.tile_sprite)
+                # is empty space
+                elif tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
+                    center_x += TILE_SIZE
+                    continue
+                else:
+                    texture = tile_textures[row][col]
+                    orientation = tile_orientations[row][col]
+                    self.tile_sprite = Tile(TILE_SIZE, center_x, center_y, texture, orientation)
+                    self.tile_list.append(self.tile_sprite)
+                center_x += TILE_SIZE
+            center_y -= TILE_SIZE  # increment y position at each level
 
 
         # TODO: add textures and orientations maps
@@ -192,9 +224,6 @@ class GameView(arcade.View):
         # TODO: add loops to generate tiles
 
         # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
-        #
-        # offset_x = TILE_SIZE // 2
-        # offset_y = TILE_SIZE // 2
         #
         # for row_index, row in enumerate(pellet_map):
         #     for col_index, tile in enumerate(row):
@@ -362,7 +391,7 @@ class GameView(arcade.View):
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
-    window = arcade.Window(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE)
 
     # Create and setup the GameView
     game = GameView()
