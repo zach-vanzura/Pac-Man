@@ -113,35 +113,6 @@ class GameView(arcade.View):
 
         # TODO: add loops to generate tiles
 
-
-        # self.player_sprite.center_x = 15
-        # self.player_sprite.center_y = 700
-        # self.controllable_list.append(self.player_sprite)
-        #
-        # # Pellet Map
-        # # - # is where you don't want pellet to be
-        # # - . is where you want pellet to be
-        # pellet_map = [
-        #     "####...-...g..#.........",
-        #     "####.###.####.#.####.##.",
-        #     "####.###.####.#.####.##.",
-        #     "####............m.......",
-        #     "####.###............###.",
-        #     "####.............-......",
-        #     "########.#..o.......####",
-        #     "########.#..........####",
-        #     "########.#..........####",
-        #     "########.#..-.......####",
-        #     "########.#.######.#.####",
-        #     "####.....s..............",
-        #     "####.###................",
-        #     "####.###............c...",
-        #     "####.###...-..#....k....",
-        #     "####.###......#.........",
-        #     "####..b.......#...a.....",
-        #     "########################",
-        # ]
-
         # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
         #
         # offset_x = TILE_SIZE // 2
