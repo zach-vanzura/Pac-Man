@@ -122,6 +122,8 @@ class MyGame(arcade.Window):
         self.tile_list = arcade.SpriteList()
         self.controllable_list = arcade.SpriteList()
         self.pacman_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+        self.pacman_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
+        self.pacman_sprite.center_y = TILE_SIZE * 9.5  # 10 is the y midpoint in the grid
         self.controllable_list.append(self.pacman_sprite)
 
         # go through the two lists to get each tile texture and orientation

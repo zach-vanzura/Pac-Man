@@ -24,8 +24,6 @@ class Controllable(arcade.Sprite):
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size
         super().__init__(path_to_sprite, 1.5 * self.scale_factor)
-        self.center_x = tile_size * 14  # 14 is the x midpoint in the grid
-        self.center_y = tile_size * 9.5  # 10 is the y midpoint in the grid
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
