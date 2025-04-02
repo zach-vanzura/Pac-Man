@@ -4,7 +4,6 @@ import arcade
 
 from consumables.pellet_small import Pellet
 from consumables.pellet_energizer import EnergizerPellet as Energizer
-import random
 from tile import *
 
 # --- Constants ---
@@ -118,10 +117,8 @@ class MyGame(arcade.Window):
     def setup(self):
         """ Set up the game and initialize the variables. """
 
-        # Sprite list
         self.tile_list = arcade.SpriteList()
 
-        # Set up the first tile
         # go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
         for row in (range(len(tile_textures))):  # iterate over y-axis
@@ -132,23 +129,21 @@ class MyGame(arcade.Window):
                     self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
                     self.tile_list.append(self.tile_sprite)
-                    center_x += TILE_SIZE
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
                     self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
                     self.tile_list.append(self.tile_sprite)
-                    center_x += TILE_SIZE
                 # is empty space
                 elif tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
                     center_x += TILE_SIZE
-                    continue  # I think this is bad practice but...
+                    continue
                 else:
                     texture = tile_textures[row][col]
                     orientation = tile_orientations[row][col]
                     self.tile_sprite = Tile(TILE_SIZE, center_x, center_y, texture, orientation)
                     self.tile_list.append(self.tile_sprite)
-                    center_x += TILE_SIZE
+                center_x += TILE_SIZE
             center_y -= TILE_SIZE  # increment y position at each level
 
 
@@ -163,8 +158,6 @@ class MyGame(arcade.Window):
     def on_update(self, delta_time):
         """ Movement and game logic """
 
-        # Call update on all sprites (The sprites don't do much in this
-        # example though.)
         self.tile_list.update()
 
 

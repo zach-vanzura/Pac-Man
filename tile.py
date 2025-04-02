@@ -36,6 +36,15 @@ class Orientations(Enum):
 
 
 def orient_image(image: str, operator: str) -> str:
+    """
+    This is a helper function that... orients the image and saves it if need be.
+    after running it the first time, it is essentially just a checker to make sure that the necessary image for the tile
+    exists and will create it if it doesn't
+    :param image: the path to either the base image or the manipulated image
+    :param operator: the manipulation to perform
+    :return: the path to the manipulated image.
+    """
+
     test_path = image[:-4] + '_' + operator + '.png'  # remove '.png', add the orientation operator and re-add '.png'
     if os.path.exists(test_path):  # remove the'.png' from the textures string
         return test_path
@@ -54,7 +63,7 @@ def orient_image(image: str, operator: str) -> str:
     elif operator == Orientations.REFLECT_Z.value:
         image_transformed = im.rotate(180)
 
-    # save the image to be used for later and then return the transformed texture
+    # save the image to be used for later and then return the path to the image
     to_save = image_transformed
     to_save.save(test_path)
 

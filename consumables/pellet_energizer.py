@@ -11,6 +11,6 @@ import os
 class EnergizerPellet(Pellet):
     def __init__(self, tile_size, window_width, window_height):
         super().__init__(tile_size, window_width, window_height)
-        self.scale_factor *= 2  # make energizer bigger than normal pellet
+        self.scale_factor = self.scale_factor * 2  # make energizer bigger than normal pellet
         self.score = 50
 
