@@ -26,6 +26,7 @@ TEXTURES = {
 
 class Orientations(Enum):
     ROTATE = 'T'
+    ROTATE_AND_FLIP = 'Y'
 
     REFLECT_X = 'x'
     REFLECT_Y = 'y'
@@ -34,20 +35,30 @@ class Orientations(Enum):
     NO_CHANGE = '0'
 
 
-def orient_image(image: str, operator: str) -> arcade.Texture:
-    image = Image.open(image)
-    if operator == Orientations.ROTATE.value:
-        image = image.rotate(90)
-    elif operator == Orientations.REFLECT_X.value:
-        image = ImageOps.flip(image)
-    elif operator == Orientations.REFLECT_Y.value:
-        image = ImageOps.mirror(image)
-    elif operator == Orientations.REFLECT_Z.value:
-        image = ImageOps.mirror(ImageOps.flip(image))
+def orient_image(image: str, operator: str) -> str:
+    test_path = image[:-4] + '_' + operator + '.png'  # remove '.png', add the orientation operator and re-add '.png'
+    if os.path.exists(test_path):  # remove the'.png' from the textures string
+        return test_path
 
-    # note: the Texture constructor may require a name attribute... the docs online say it does
-    # but the docs on python say that it DOES NOT...
-    return arcade.Texture(image, hit_box_algorithm=arcade.hitbox.PymunkHitBoxAlgorithm(detail=1))
+    im = Image.open(image)
+    image_transformed = None
+    if operator == Orientations.ROTATE.value:
+        image_transformed = im.rotate(270)
+    elif operator == Orientations.ROTATE_AND_FLIP.value:
+        image_transformed_ = im.rotate(90)
+        image_transformed = ImageOps.flip(image_transformed_)
+    elif operator == Orientations.REFLECT_X.value:
+        image_transformed = ImageOps.flip(im)
+    elif operator == Orientations.REFLECT_Y.value:
+        image_transformed = ImageOps.mirror(im)
+    elif operator == Orientations.REFLECT_Z.value:
+        image_transformed = im.rotate(180)
+
+    # save the image to be used for later and then return the transformed texture
+    to_save = image_transformed
+    to_save.save(test_path)
+
+    return test_path
 
 
 class Tile(arcade.Sprite):
@@ -66,7 +77,7 @@ class Tile(arcade.Sprite):
         self.image = None
         self.image_path = os.path.join('images', 'tiles', TEXTURES[texture])
         self.original_size = 768  # original scale of the image
-        self.scale = tile_size / self.original_size
+        self.scale_factor = tile_size / self.original_size
 
         # by checking the orientation, we know how to manipulate the image
         if orientation != Orientations.NO_CHANGE.value:
@@ -74,4 +85,4 @@ class Tile(arcade.Sprite):
         else:
             self.image = self.image_path
 
-        super().__init__(self.image, self.scale, center_x, center_y)
+        super().__init__(self.image, self.scale_factor, center_x, center_y, hit_box_alorithm='Detailed')
