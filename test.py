@@ -40,7 +40,7 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 """
 
 
-# TODO: create mazes, create start menu screen, add animations, add enemy sprites,
+# TODO: create start menu screen, add animations, add enemy sprites,
 # add enemy movement and attacking, add settings menu, add alternative sprites (Jason's face),
 # add various menus/start screens/end screens (look up what is actually in pacman),
 # etc...
@@ -140,7 +140,7 @@ tile_orientations = [
     "############################",
 ]
 
-class GameView(arcade.View):
+class GameView(arcade.Window):
     """
     Main application class.
 
@@ -153,7 +153,7 @@ class GameView(arcade.View):
         """ Initializer """
 
         # Call the parent class initializer
-        super().__init__()
+        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
 
         # Variables that will hold sprite lists
         self.collisions = None
@@ -181,8 +181,7 @@ class GameView(arcade.View):
         # and set them to None
 
     def setup(self):
-        self.consumable_list = arcade.SpriteList()
-        self.tile_list = arcade.SpriteList()
+        self.tile_list = arcade.SpriteList(use_spatial_hash=True)
 
         self.controllable_list = arcade.SpriteList()
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
@@ -199,12 +198,12 @@ class GameView(arcade.View):
                 if tile_textures[row][col] == Symbols.PELLET.value:
                     self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
-                    self.consumable_list.append(self.tile_sprite)
+                    self.tile_list.append(self.tile_sprite)
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
                     self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
                     self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
-                    self.consumable_list.append(self.tile_sprite)
+                    self.tile_list.append(self.tile_sprite)
                 # is empty space
                 elif tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
                     center_x += TILE_SIZE
@@ -218,12 +217,12 @@ class GameView(arcade.View):
             center_y -= TILE_SIZE  # increment y position at each level
 
 
-    # TODO: KEEP TRACK OF SCORE WHEN PELLETS ARE EATEN
     def on_draw(self):
         self.clear()
-        self.consumable_list.draw()
         self.tile_list.draw()
+        self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
+        self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -239,6 +238,8 @@ class GameView(arcade.View):
         elif self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
 
+
+
     def on_update(self, delta_time):
         """
         All the logic to move, and the game logic goes here.
@@ -248,18 +249,18 @@ class GameView(arcade.View):
         self.tile_list.update()
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
-        self.collisions = self.player_sprite.collides_with_list(self.consumable_list)
+        self.collisions = self.player_sprite.collides_with_list(self.tile_list)
         for sprite in self.collisions:
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
-            # fixme: this does NOT work as intended
-            # if not sprite.is_edible:
-            #     self.player_sprite.change_x = self.player_sprite.center_x - self.player_sprite.change_x
-            #     self.player_sprite.change_y = self.player_sprite.center_y - self.player_sprite.change_y
+            # fixme: this does NOT work as intended, pacman bounces off walls and does not move smoothly along the maze
+            if isinstance(sprite, Tile):
+                self.player_sprite.center_x = self.player_sprite.center_x - self.player_sprite.change_x
+                self.player_sprite.center_y = self.player_sprite.center_y - self.player_sprite.change_y
 
             print(self.player_sprite.score)
-        for sprite in self.consumable_list:
+        for sprite in self.tile_list:
             sprite.update()
 
     def on_key_press(self, key, key_modifiers):
@@ -272,38 +273,31 @@ class GameView(arcade.View):
         # TODO: change the direction pacman is facing based on key press
         if key == arcade.key.UP:
             self.up_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.DOWN:
-            self.down_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.LEFT:
-            self.left_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT:
-            self.right_pressed = True
-            self.update_player_speed()
-        elif key == arcade.key.ESCAPE:
-            self.esc_pressed = True
-
-    # TODO: CHANGE LOGIC SO PACMAN CONTINUES MOVING IN THE DIRECTION OF A KEY PRESS EVEN AFTER RELEASE
-    def on_key_release(self, key, key_modifiers):
-        """
-        Called whenever the user lets off a previously pressed key.
-        """
-        if key == arcade.key.UP:
-            self.up_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.DOWN:
             self.down_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.LEFT:
             self.left_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT:
             self.right_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.ESCAPE:
-            self.esc_pressed = False
+        elif key == arcade.key.DOWN:
+            self.up_pressed = False
+            self.down_pressed = True
+            self.left_pressed = False
+            self.right_pressed = False
+            self.update_player_speed()
+        elif key == arcade.key.LEFT:
+            self.up_pressed = False
+            self.down_pressed = False
+            self.left_pressed = True
+            self.right_pressed = False
+            self.update_player_speed()
+        elif key == arcade.key.RIGHT:
+            self.up_pressed = False
+            self.down_pressed = False
+            self.left_pressed = False
+            self.right_pressed = True
+            self.update_player_speed()
+
+        if key == arcade.key.ESCAPE:
+            self.esc_pressed = True
 
     def reset(self):
         """Reset the game to the initial state."""
@@ -314,14 +308,10 @@ class GameView(arcade.View):
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE)
 
     # Create and setup the GameView
     game = GameView()
     game.setup()
-
-    # Show GameView on screen
-    window.show_view(game)
 
     # Start the arcade game loop
     arcade.run()

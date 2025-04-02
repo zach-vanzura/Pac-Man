@@ -10,7 +10,6 @@ import os
 # TODO: There may need to be more functionality in here based on interactions with pac-man and the ghosts
 class EnergizerPellet(Pellet):
     def __init__(self, tile_size, window_width, window_height):
-        super().__init__(tile_size, window_width, window_height)
-        self.scale_factor = self.scale_factor * 2  # make energizer bigger than normal pellet
+        super().__init__(2 * tile_size, window_width, window_height)
         self.score = 50
 
