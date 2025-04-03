@@ -54,7 +54,7 @@ SCREEN_HEIGHT = 36 * TILE_SIZE  # 36 rows
 WINDOW_TITLE = "PAC-MAN"
 
 # Set player movement speed
-MOVEMENT_SPEED = 5
+MOVEMENT_SPEED = 2.5
 
 class Symbols(Enum):
     PELLET = '.'
@@ -156,9 +156,10 @@ class GameView(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
 
         # Variables that will hold sprite lists
-        self.collisions = None
+        self.wall_collisions = None
         self.controllable_list = None
         self.tile_list = None
+        self.consumable_list = None
         self.to_be_eaten = None
 
         # Set up the player info
@@ -177,13 +178,16 @@ class GameView(arcade.Window):
         # Set background color
         self.background_color = arcade.color.BLACK
 
-        # If you have sprite lists, you should create them here,
-        # and set them to None
+        self.physics_engine = None
+
 
     def setup(self):
+        # initialize lists
         self.tile_list = arcade.SpriteList(use_spatial_hash=True)
-
+        self.consumable_list = arcade.SpriteList()
         self.controllable_list = arcade.SpriteList()
+        self.to_be_eaten = arcade.SpriteList()
+
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9.5  # 10 is the y midpoint in the grid
@@ -196,14 +200,14 @@ class GameView(arcade.Window):
             for col in (range(len(tile_textures[0]))):  # iterate over x-axis
                 # is pellet
                 if tile_textures[row][col] == Symbols.PELLET.value:
-                    self.tile_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
-                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
-                    self.tile_list.append(self.tile_sprite)
+                    self.consumable_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+                    self.consumable_list.append(self.consumable_sprite)
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
-                    self.tile_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
-                    self.tile_sprite.center_x, self.tile_sprite.center_y = center_x, center_y
-                    self.tile_list.append(self.tile_sprite)
+                    self.consumable_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+                    self.consumable_list.append(self.consumable_sprite)
                 # is empty space
                 elif tile_textures[row][col] == Symbols.EMPTY_SPACE.value:
                     center_x += TILE_SIZE
@@ -215,11 +219,13 @@ class GameView(arcade.Window):
                     self.tile_list.append(self.tile_sprite)
                 center_x += TILE_SIZE
             center_y -= TILE_SIZE  # increment y position at each level
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
 
 
     def on_draw(self):
         self.clear()
         self.tile_list.draw()
+        self.consumable_list.draw()
         self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
         self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
@@ -238,29 +244,25 @@ class GameView(arcade.Window):
         elif self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
 
-
-
     def on_update(self, delta_time):
         """
         All the logic to move, and the game logic goes here.
         Normally, you'll call update() on the sprite lists that
         need it.
         """
-        self.tile_list.update()
+        self.physics_engine.update()
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
-        self.collisions = self.player_sprite.collides_with_list(self.tile_list)
-        for sprite in self.collisions:
+        self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
+        for sprite in self.to_be_eaten:
+            # this check isn't really necessary right now, but it may be helpful in the future with ghosts
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
             # fixme: this does NOT work as intended, pacman bounces off walls and does not move smoothly along the maze
-            if isinstance(sprite, Tile):
-                self.player_sprite.center_x = self.player_sprite.center_x - self.player_sprite.change_x
-                self.player_sprite.center_y = self.player_sprite.center_y - self.player_sprite.change_y
 
             print(self.player_sprite.score)
-        for sprite in self.tile_list:
+        for sprite in self.consumable_list:
             sprite.update()
 
     def on_key_press(self, key, key_modifiers):
@@ -271,6 +273,7 @@ class GameView(arcade.Window):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         # TODO: change the direction pacman is facing based on key press
+        self.wall_collisions = self.player_sprite.collides_with_list(self.tile_list)
         if key == arcade.key.UP:
             self.up_pressed = True
             self.down_pressed = False
