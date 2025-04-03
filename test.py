@@ -265,6 +265,7 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
 
+
     def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
@@ -273,26 +274,25 @@ class GameView(arcade.Window):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         # TODO: change the direction pacman is facing based on key press
-        self.wall_collisions = self.player_sprite.collides_with_list(self.tile_list)
-        if key == arcade.key.UP:
+        if key == arcade.key.UP:  # x width needs to fit through gap
             self.up_pressed = True
             self.down_pressed = False
             self.left_pressed = False
             self.right_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.DOWN:
+        elif key == arcade.key.DOWN: # x width needs to fit through gap
             self.up_pressed = False
             self.down_pressed = True
             self.left_pressed = False
             self.right_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.LEFT:
+        elif key == arcade.key.LEFT:  # height needs to fit through gap
             self.up_pressed = False
             self.down_pressed = False
             self.left_pressed = True
             self.right_pressed = False
             self.update_player_speed()
-        elif key == arcade.key.RIGHT:
+        elif key == arcade.key.RIGHT:  # height needs to fit through gap
             self.up_pressed = False
             self.down_pressed = False
             self.left_pressed = False
@@ -306,6 +306,24 @@ class GameView(arcade.Window):
         """Reset the game to the initial state."""
         # Do changes needed to restart the game here if you want to support that
         pass
+
+    """
+    Can move vertical and can move horizontal functions are helper functions to force pacman to move only when he fits
+    at the moment, it isn't used but it could be helpful soon.
+    """
+    def can_move_vertical(self, to_move) -> bool:
+        collisions_x = self.player_sprite.collides_with_list(self.tile_list)
+        for tile in collisions_x:
+            if tile.left >= to_move.right or tile.right <= to_move.left:
+                return False
+        return True
+
+    def can_move_horizontal(self, to_move) -> bool:
+        collisions_y = self.player_sprite.collides_with_list(self.tile_list)
+        for tile in collisions_y:
+            if tile.bottom >= to_move.top or tile.top <= to_move.bottom:
+                return False
+        return True
 
 
 def main():
