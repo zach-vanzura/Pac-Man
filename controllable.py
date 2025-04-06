@@ -23,7 +23,7 @@ class Controllable(arcade.Sprite):
         self.image = Image.open(path_to_sprite)
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size
-        super().__init__(path_to_sprite, 1.75 * self.scale_factor, hit_box_algorithm='Simple')
+        super().__init__(path_to_sprite, 1.5 * self.scale_factor, hit_box_algorithm='Simple')
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0

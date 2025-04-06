@@ -47,14 +47,16 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 
 # Set tile size, window height and width
 TILE_SIZE = 24
-SCREEN_WIDTH = 28 * TILE_SIZE  # 28 columns
-SCREEN_HEIGHT = 36 * TILE_SIZE  # 36 rows
+NUM_ROWS = 36
+NUM_COLS = 28
+SCREEN_HEIGHT = NUM_ROWS * TILE_SIZE  # 36 rows
+SCREEN_WIDTH = NUM_COLS * TILE_SIZE  # 28 columns
 
 # Set window title
 WINDOW_TITLE = "PAC-MAN"
 
 # Set player movement speed
-MOVEMENT_SPEED = 2.5
+MOVEMENT_SPEED = 2
 
 class Symbols(Enum):
     PELLET = '.'
@@ -140,6 +142,21 @@ tile_orientations = [
     "############################",
 ]
 
+can_move_tiles = ['o', '.', '#']
+
+
+def in_bounds(row, col):
+    """
+    :param row: the row of the maze
+    :param col: the column of the maze
+    :return: the character at the given row, col index if there is one
+    """
+
+    if 0 <= row < NUM_ROWS and 0 <= col < NUM_COLS:
+        return tile_textures[row][col]
+    return None  # out-of-bounds, treat as wall
+
+
 class GameView(arcade.Window):
     """
     Main application class.
@@ -172,6 +189,7 @@ class GameView(arcade.Window):
         self.right_pressed = False
         self.up_pressed = False
         self.down_pressed = False
+        self.buffered_key = False
         # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
@@ -179,7 +197,6 @@ class GameView(arcade.Window):
         self.background_color = arcade.color.BLACK
 
         self.physics_engine = None
-
 
     def setup(self):
         # initialize lists
@@ -190,7 +207,7 @@ class GameView(arcade.Window):
 
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
-        self.player_sprite.center_y = TILE_SIZE * 9.5  # 10 is the y midpoint in the grid
+        self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
 
         # go through the two lists to get each tile texture and orientation
@@ -221,14 +238,13 @@ class GameView(arcade.Window):
             center_y -= TILE_SIZE  # increment y position at each level
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
 
-
     def on_draw(self):
         self.clear()
         self.tile_list.draw()
         self.consumable_list.draw()
-        self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
+        # self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
-        self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
+        # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -237,14 +253,14 @@ class GameView(arcade.Window):
 
         if self.up_pressed and not self.down_pressed:
             self.player_sprite.change_y = MOVEMENT_SPEED
-        elif self.down_pressed and not self.up_pressed:
+        if self.down_pressed and not self.up_pressed:
             self.player_sprite.change_y = -MOVEMENT_SPEED
         if self.left_pressed and not self.right_pressed:
             self.player_sprite.change_x = -MOVEMENT_SPEED
-        elif self.right_pressed and not self.left_pressed:
+        if self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
 
-    def on_update(self, delta_time):
+    def on_update(self, delta_time=108):
         """
         All the logic to move, and the game logic goes here.
         Normally, you'll call update() on the sprite lists that
@@ -265,6 +281,32 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
 
+        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # check the next tile, up, down, left, or right is within bounds
+        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
+        next_y_neg = in_bounds(curr_row + 1, curr_col)
+        next_x_pos = in_bounds(curr_row, curr_col + 1)
+        next_x_neg = in_bounds(curr_row, curr_col - 1)
+
+        if self.up_pressed and next_y_pos not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y + 1.5
+        if self.down_pressed and next_y_neg not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y - 1.5
+        if self.left_pressed and next_x_neg not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x - 1.5
+        if self.right_pressed and next_x_pos not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x + 1.5
+
+        if self.buffered_key:
+            self.on_key_press(self.buffered_key, key_modifiers=None)
+
+        # closing conditions for the game
+        if len(self.consumable_list) == 0 or self.esc_pressed:
+            self.close()
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -274,30 +316,57 @@ class GameView(arcade.Window):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         # TODO: change the direction pacman is facing based on key press
-        if key == arcade.key.UP:  # x width needs to fit through gap
-            self.up_pressed = True
-            self.down_pressed = False
-            self.left_pressed = False
-            self.right_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.DOWN: # x width needs to fit through gap
-            self.up_pressed = False
-            self.down_pressed = True
-            self.left_pressed = False
-            self.right_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.LEFT:  # height needs to fit through gap
-            self.up_pressed = False
-            self.down_pressed = False
-            self.left_pressed = True
-            self.right_pressed = False
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT:  # height needs to fit through gap
-            self.up_pressed = False
-            self.down_pressed = False
-            self.left_pressed = False
-            self.right_pressed = True
-            self.update_player_speed()
+        # accounting for 0 indexing and (0,0) being at the origin
+        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # check the next tile, up, down, left, or right is within bounds
+        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
+        next_y_neg = in_bounds(curr_row + 1, curr_col)
+        next_x_pos = in_bounds(curr_row, curr_col + 1)
+        next_x_neg = in_bounds(curr_row, curr_col - 1)
+
+
+        # first check if there is a buffered key press before changing the current key press
+
+        if abs(self.player_sprite.center_x - tile_center_x) < 4:
+            if key == arcade.key.UP and next_y_pos in can_move_tiles:
+                self.up_pressed = True
+                self.down_pressed = False
+                self.left_pressed = False
+                self.right_pressed = False
+                self.update_player_speed()
+                self.buffered_key = False
+            elif key == arcade.key.DOWN and next_y_neg in can_move_tiles:
+                self.up_pressed = False
+                self.down_pressed = True
+                self.left_pressed = False
+                self.right_pressed = False
+                self.update_player_speed()
+                self.buffered_key = False
+            else:
+                # the next vertical tile isn't a pellet or empty space
+                self.buffered_key = key
+        if abs(self.player_sprite.center_y - tile_center_y) < 4:
+            if key == arcade.key.LEFT and next_x_neg in can_move_tiles:
+                self.up_pressed = False
+                self.down_pressed = False
+                self.left_pressed = True
+                self.right_pressed = False
+                self.update_player_speed()
+                self.buffered_key = False
+            elif key == arcade.key.RIGHT and next_x_pos in can_move_tiles:  # height needs to fit through gap
+                self.up_pressed = False
+                self.down_pressed = False
+                self.left_pressed = False
+                self.right_pressed = True
+                self.update_player_speed()
+                self.buffered_key = False
+            else:
+                # the next horizontal key isn't a pellet or empty space
+                self.buffered_key = key
 
         if key == arcade.key.ESCAPE:
             self.esc_pressed = True
@@ -311,19 +380,6 @@ class GameView(arcade.Window):
     Can move vertical and can move horizontal functions are helper functions to force pacman to move only when he fits
     at the moment, it isn't used but it could be helpful soon.
     """
-    def can_move_vertical(self, to_move) -> bool:
-        collisions_x = self.player_sprite.collides_with_list(self.tile_list)
-        for tile in collisions_x:
-            if tile.left >= to_move.right or tile.right <= to_move.left:
-                return False
-        return True
-
-    def can_move_horizontal(self, to_move) -> bool:
-        collisions_y = self.player_sprite.collides_with_list(self.tile_list)
-        for tile in collisions_y:
-            if tile.bottom >= to_move.top or tile.top <= to_move.bottom:
-                return False
-        return True
 
 
 def main():
