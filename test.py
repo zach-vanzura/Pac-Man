@@ -331,9 +331,11 @@ class GameView(arcade.Window):
             cur = con.cursor()
             cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
             count = cur.fetchone()
+            print(f"{count[0]}")
 
-            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count}";')
+            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
             con.commit()
+            print(f"{playerId}")
 
             cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
             con.commit()
@@ -342,7 +344,7 @@ class GameView(arcade.Window):
             con.commit()
 
 
-def on_key_press(self, key, key_modifiers):
+    def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
 
@@ -405,10 +407,10 @@ def on_key_press(self, key, key_modifiers):
         if key == arcade.key.ESCAPE:
             self.esc_pressed = True
 
-def reset(self):
-    """Reset the game to the initial state."""
-    # Do changes needed to restart the game here if you want to support that
-    pass
+    def reset(self):
+        """Reset the game to the initial state."""
+        # Do changes needed to restart the game here if you want to support that
+        pass
 
     """
     Can move vertical and can move horizontal functions are helper functions to force pacman to move only when he fits
