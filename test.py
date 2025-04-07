@@ -13,6 +13,8 @@ from consumables.orange import Orange
 from consumables.pellet_small import Pellet
 from consumables.strawberry import Strawberry
 from tile import *
+import sqlite3 # included in standard python distribution
+import pandas as pd
 
 """
 CS3050: Software Engineering
@@ -238,6 +240,13 @@ class GameView(arcade.Window):
             center_y -= TILE_SIZE  # increment y position at each level
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
 
+        # Implement Database
+        playerId = 1 # alter if additional player is added
+        con = sqlite3.connect("pacman_score.db", isolation_level=None)
+        cur = con.cursor()
+        cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
+        con.commit()
+
     def on_draw(self):
         self.clear()
         self.tile_list.draw()
@@ -299,6 +308,14 @@ class GameView(arcade.Window):
             # fixme: this does NOT work as intended, pacman bounces off walls and does not move smoothly along the maze
 
             print(self.player_sprite.score)
+
+            # Implement Database
+            playerId = 1 # alter if additional player is added
+            con = sqlite3.connect("pacman_score.db", isolation_level=None)
+            cur = con.cursor()
+            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{playerId}";')
+            con.commit()
+
         for sprite in self.consumable_list:
             sprite.update()
 
@@ -311,7 +328,24 @@ class GameView(arcade.Window):
         if len(self.consumable_list) == 0 or self.esc_pressed:
             self.close()
 
-    def on_key_press(self, key, key_modifiers):
+            # Implement Database
+            playerId = input("Enter your name: ")
+            con = sqlite3.connect("pacman_score.db", isolation_level=None)
+            cur = con.cursor()
+            cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
+            count = cur.fetchone()
+
+            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count}";')
+            con.commit()
+
+            cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
+            con.commit()
+
+            cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
+            con.commit()
+
+
+def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
 
@@ -374,10 +408,10 @@ class GameView(arcade.Window):
         if key == arcade.key.ESCAPE:
             self.esc_pressed = True
 
-    def reset(self):
-        """Reset the game to the initial state."""
-        # Do changes needed to restart the game here if you want to support that
-        pass
+def reset(self):
+    """Reset the game to the initial state."""
+    # Do changes needed to restart the game here if you want to support that
+    pass
 
     """
     Can move vertical and can move horizontal functions are helper functions to force pacman to move only when he fits
