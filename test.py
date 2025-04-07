@@ -3,7 +3,7 @@
 import arcade
 from consumables.apple import Apple
 from consumables.bell import Bell
-from controllable import Controllable
+from controllable import *
 from consumables.cherry import Cherry
 from consumables.galaxian import Galaxian
 from consumables.pellet_energizer import EnergizerPellet as Energizer
@@ -212,6 +212,25 @@ class GameView(arcade.Window):
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
 
+        # Center of the screen (spawn room)
+        spawn_x = SCREEN_WIDTH // 2
+        spawn_y = SCREEN_HEIGHT // 2
+
+        # Create ghosts with AI
+        self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
+        self.pinky = Ghost("images/pinky.png", "Pinky", self.player_sprite, self.tile_list)
+        self.inky = Ghost("images/inky.png", "Inky", self.player_sprite, self.tile_list, blinky=self.blinky)
+        self.clyde = Ghost("images/clyde.png", "Clyde", self.player_sprite, self.tile_list)
+
+        # Position them staggered in spawn room
+        offsets = [-TILE_SIZE, 0, TILE_SIZE, TILE_SIZE * 2]
+        for i, ghost in enumerate([self.blinky, self.pinky, self.inky, self.clyde]):
+            ghost.center_x = spawn_x + offsets[i]
+            ghost.center_y = spawn_y
+
+        self.ghosts = arcade.SpriteList()
+        self.ghosts.extend([self.blinky, self.pinky, self.inky, self.clyde])
+
         # go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
         for row in (range(len(tile_textures))):  # iterate over y-axis
@@ -254,6 +273,7 @@ class GameView(arcade.Window):
         # self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
         # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
+        self.ghosts.draw()
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -342,6 +362,7 @@ class GameView(arcade.Window):
             cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
             con.commit()
 
+        self.ghosts.update()
 
     def on_key_press(self, key, key_modifiers):
         """
