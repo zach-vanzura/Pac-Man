@@ -324,6 +324,7 @@ class GameView(arcade.Window):
         # closing conditions for the game
         if len(self.consumable_list) == 0 or self.esc_pressed:
             self.close()
+
             # Implement Database
             playerId = input("Enter your name: ")
             con = sqlite3.connect("pacman_score.db", isolation_level=None)
