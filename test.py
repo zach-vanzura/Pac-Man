@@ -207,7 +207,7 @@ class GameView(arcade.Window):
         self.controllable_list = arcade.SpriteList()
         self.to_be_eaten = arcade.SpriteList()
 
-        self.player_sprite = Controllable(os.path.join('images', 'pacman-animated.gif'), TILE_SIZE)
+        self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
@@ -251,9 +251,9 @@ class GameView(arcade.Window):
         self.clear()
         self.tile_list.draw()
         self.consumable_list.draw()
-        self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
+        # self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
-        self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
+        # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -318,8 +318,6 @@ class GameView(arcade.Window):
 
         for sprite in self.consumable_list:
             sprite.update()
-
-
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
@@ -411,12 +409,9 @@ def on_key_press(self, key, key_modifiers):
 def reset(self):
     """Reset the game to the initial state."""
     # Do changes needed to restart the game here if you want to support that
+    # maybe just restart
     pass
 
-    """
-    Can move vertical and can move horizontal functions are helper functions to force pacman to move only when he fits
-    at the moment, it isn't used but it could be helpful soon.
-    """
 
 
 def main():
