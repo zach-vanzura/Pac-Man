@@ -319,6 +319,26 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
 
+        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # check the next tile, up, down, left, or right is within bounds
+        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
+        next_y_neg = in_bounds(curr_row + 1, curr_col)
+        next_x_pos = in_bounds(curr_row, curr_col + 1)
+        next_x_neg = in_bounds(curr_row, curr_col - 1)
+
+        if self.up_pressed and next_y_pos not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y + 1.5
+        if self.down_pressed and next_y_neg not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y - 1.5
+        if self.left_pressed and next_x_neg not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x - 1.5
+        if self.right_pressed and next_x_pos not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x + 1.5
+
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
 
@@ -343,7 +363,7 @@ class GameView(arcade.Window):
             con.commit()
 
 
-def on_key_press(self, key, key_modifiers):
+    def on_key_press(self, key, key_modifiers):
         """
         Called whenever a key on the keyboard is pressed.
 
@@ -406,11 +426,10 @@ def on_key_press(self, key, key_modifiers):
         if key == arcade.key.ESCAPE:
             self.esc_pressed = True
 
-def reset(self):
-    """Reset the game to the initial state."""
-    # Do changes needed to restart the game here if you want to support that
-    # maybe just restart
-    pass
+    def reset(self):
+        """Reset the game to the initial state."""
+        # Do changes needed to restart the game here if you want to support that
+        pass
 
 
 
