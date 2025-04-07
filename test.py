@@ -205,7 +205,7 @@ class GameView(arcade.Window):
         self.controllable_list = arcade.SpriteList()
         self.to_be_eaten = arcade.SpriteList()
 
-        self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+        self.player_sprite = Controllable(os.path.join('images', 'pacman-animated.gif'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
@@ -242,9 +242,9 @@ class GameView(arcade.Window):
         self.clear()
         self.tile_list.draw()
         self.consumable_list.draw()
-        # self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
+        self.tile_list.draw_hit_boxes(color=arcade.color.RED, line_thickness= 1)
         self.controllable_list.draw()
-        # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
+        self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -266,6 +266,27 @@ class GameView(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        # position checks before collision checks
+        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # check the next tile, up, down, left, or right is within bounds
+        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
+        next_y_neg = in_bounds(curr_row + 1, curr_col)
+        next_x_pos = in_bounds(curr_row, curr_col + 1)
+        next_x_neg = in_bounds(curr_row, curr_col - 1)
+
+        if self.up_pressed and next_y_pos not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y - TILE_SIZE // 4
+        if self.down_pressed and next_y_neg not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y + TILE_SIZE // 4
+        if self.left_pressed and next_x_neg not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x + TILE_SIZE // 4
+        if self.right_pressed and next_x_pos not in can_move_tiles and curr_col != NUM_COLS - 1:  # needed for tunnel
+            self.player_sprite.center_x = tile_center_x - TILE_SIZE // 4
+
         self.physics_engine.update()
         self.controllable_list.update(delta_time)
         # find all sprites tha will collide with the pac man
@@ -281,25 +302,7 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
 
-        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
-        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
-        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
-        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
 
-        # check the next tile, up, down, left, or right is within bounds
-        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
-        next_y_neg = in_bounds(curr_row + 1, curr_col)
-        next_x_pos = in_bounds(curr_row, curr_col + 1)
-        next_x_neg = in_bounds(curr_row, curr_col - 1)
-
-        if self.up_pressed and next_y_pos not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y + 1.5
-        if self.down_pressed and next_y_neg not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y - 1.5
-        if self.left_pressed and next_x_neg not in can_move_tiles:
-            self.player_sprite.center_x = tile_center_x - 1.5
-        if self.right_pressed and next_x_pos not in can_move_tiles:
-            self.player_sprite.center_x = tile_center_x + 1.5
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
