@@ -10,8 +10,9 @@ Group Members:
 """
 
 import arcade
-from PIL import Image
+from PIL import Image, ImageOps
 import math
+from pathlib import Path
 from test import TILE_SIZE, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT
 import time
 import random
@@ -23,17 +24,39 @@ CHASE_DURATION = 20
 This is the super class for all things controllable in Pac Man: The Player, The Ghosts, **maybe** some walls, 
 """
 
+TEXTURE_ORIENTATIONS = {
+    "LEFT_FACING": 3,
+    "RIGHT_FACING": 0,
+    "UP_FACING": 1,
+    "DOWN_FACING": 2
+}
+
 
 class Controllable(arcade.Sprite):
     # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
     def __init__(self, path_to_sprite, tile_size):
-        if path_to_sprite[len(path_to_sprite) - 4:].lower() == '.gif':
-            self.image = arcade.load_animated_gif(path_to_sprite)
-        else:
-            self.image = Image.open(path_to_sprite)
+        self.txtrs = []
+        self.image_ = Image.open(path_to_sprite)
+        self.image = self.image_.convert('RGBA')
+        # right facing
+        self.txtr = arcade.Texture(self.image)
+        self.txtrs.append(self.txtr)
+        # up facing, rotation is anticlockwise
+        self.image_up = self.image.rotate(90)
+        self.txtr = arcade.Texture(self.image_up)
+        self.txtrs.append(self.txtr)
+        #down facing
+        self.image_down = self.image_up.rotate(180)
+        self.txtr = arcade.Texture(self.image_down)
+        self.txtrs.append(self.txtr)
+        # start left facing so left txtr is last so it is current at startup
+        self.image_left = self.image.rotate(180)
+        self.txtr = arcade.Texture(self.image_left)
+        self.txtrs.append(self.txtr)
+
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size
-        super().__init__(path_to_sprite, 1.5 * self.scale_factor, hit_box_algorithm='Simple')
+        super().__init__(self.txtr, 1.5 * self.scale_factor, hit_box_algorithm='Simple')
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
@@ -44,6 +67,18 @@ class Controllable(arcade.Sprite):
         # Remove these lines if physics engine is moving player
         self.center_x += self.change_x
         self.center_y += self.change_y
+
+        if self.change_x < 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+        elif self.change_x > 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+        elif self.change_y > 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
+        elif self.change_y < 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
+        else:
+            # don't change texture if no change in direction
+            self.texture = self.texture
 
         # sprites will wrap around the screen
         if self.left < 0:
