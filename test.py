@@ -175,6 +175,7 @@ class GameView(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
 
         # Variables that will hold sprite lists
+        self.curr_row = None
         self.wall_collisions = None
         self.controllable_list = None
         self.tile_list = None
@@ -192,7 +193,6 @@ class GameView(arcade.Window):
         self.up_pressed = False
         self.down_pressed = False
         self.buffered_key = False
-        # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
         # Set background color
@@ -296,25 +296,22 @@ class GameView(arcade.Window):
         need it.
         """
         # position checks before collision checks
-        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
-        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
-        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
-        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
 
         # check the next tile, up, down, left, or right is within bounds
-        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
-        next_y_neg = in_bounds(curr_row + 1, curr_col)
-        next_x_pos = in_bounds(curr_row, curr_col + 1)
-        next_x_neg = in_bounds(curr_row, curr_col - 1)
+        self.update_curr_tile()
+        self.next_y_pos = in_bounds(self.curr_row - 1, self.curr_col)  # going up, decrement index
+        self.next_y_neg = in_bounds(self.curr_row + 1, self.curr_col)
+        self.next_x_pos = in_bounds(self.curr_row, self.curr_col + 1)
+        self.next_x_neg = in_bounds(self.curr_row, self.curr_col - 1)
 
-        if self.up_pressed and next_y_pos not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y - TILE_SIZE // 4
-        if self.down_pressed and next_y_neg not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y + TILE_SIZE // 4
-        if self.left_pressed and next_x_neg not in can_move_tiles:
-            self.player_sprite.center_x = tile_center_x + TILE_SIZE // 4
-        if self.right_pressed and next_x_pos not in can_move_tiles and curr_col != NUM_COLS - 1:  # needed for tunnel
-            self.player_sprite.center_x = tile_center_x - TILE_SIZE // 4
+        if self.up_pressed and self.next_y_pos not in can_move_tiles:
+            self.player_sprite.center_y = self.tile_center_y - TILE_SIZE // 4
+        if self.down_pressed and self.next_y_neg not in can_move_tiles:
+            self.player_sprite.center_y = self.tile_center_y + TILE_SIZE // 4
+        if self.left_pressed and self.next_x_neg not in can_move_tiles:
+            self.player_sprite.center_x = self.tile_center_x + TILE_SIZE // 4
+        if self.right_pressed and self.next_x_pos not in can_move_tiles and self.curr_col != NUM_COLS - 1:  # needed for tunnel
+            self.player_sprite.center_x = self.tile_center_x - TILE_SIZE // 4
 
         self.physics_engine.update()
         self.controllable_list.update(delta_time)
@@ -372,30 +369,18 @@ class GameView(arcade.Window):
         https://api.arcade.academy/en/latest/arcade.key.html
         """
         # TODO: change the direction pacman is facing based on key press
-        # accounting for 0 indexing and (0,0) being at the origin
-        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
-        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
-        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
-        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
-
-        # check the next tile, up, down, left, or right is within bounds
-        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
-        next_y_neg = in_bounds(curr_row + 1, curr_col)
-        next_x_pos = in_bounds(curr_row, curr_col + 1)
-        next_x_neg = in_bounds(curr_row, curr_col - 1)
-
 
         # first check if there is a buffered key press before changing the current key press
 
-        if abs(self.player_sprite.center_x - tile_center_x) < 4:
-            if key == arcade.key.UP and next_y_pos in can_move_tiles:
+        if abs(self.player_sprite.center_x - self.tile_center_x) < 4:
+            if key == arcade.key.UP and self.next_y_pos in can_move_tiles:
                 self.up_pressed = True
                 self.down_pressed = False
                 self.left_pressed = False
                 self.right_pressed = False
                 self.update_player_speed()
                 self.buffered_key = False
-            elif key == arcade.key.DOWN and next_y_neg in can_move_tiles:
+            elif key == arcade.key.DOWN and self.next_y_neg in can_move_tiles:
                 self.up_pressed = False
                 self.down_pressed = True
                 self.left_pressed = False
@@ -405,15 +390,15 @@ class GameView(arcade.Window):
             else:
                 # the next vertical tile isn't a pellet or empty space
                 self.buffered_key = key
-        if abs(self.player_sprite.center_y - tile_center_y) < 4:
-            if key == arcade.key.LEFT and next_x_neg in can_move_tiles:
+        if abs(self.player_sprite.center_y - self.tile_center_y) < 4:
+            if key == arcade.key.LEFT and self.next_x_neg in can_move_tiles:
                 self.up_pressed = False
                 self.down_pressed = False
                 self.left_pressed = True
                 self.right_pressed = False
                 self.update_player_speed()
                 self.buffered_key = False
-            elif key == arcade.key.RIGHT and next_x_pos in can_move_tiles:  # height needs to fit through gap
+            elif key == arcade.key.RIGHT and self.next_x_pos in can_move_tiles:  # height needs to fit through gap
                 self.up_pressed = False
                 self.down_pressed = False
                 self.left_pressed = False
@@ -431,6 +416,14 @@ class GameView(arcade.Window):
         """Reset the game to the initial state."""
         # Do changes needed to restart the game here if you want to support that
         pass
+
+    def update_curr_tile(self) -> (int, int):
+        self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        self.tile_center_x = self.curr_col * TILE_SIZE + TILE_SIZE // 2
+
+
 
 
 

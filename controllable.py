@@ -27,7 +27,10 @@ This is the super class for all things controllable in Pac Man: The Player, The 
 class Controllable(arcade.Sprite):
     # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
     def __init__(self, path_to_sprite, tile_size):
-        self.image = Image.open(path_to_sprite)
+        if path_to_sprite[len(path_to_sprite) - 4:].lower() == '.gif':
+            self.image = arcade.load_animated_gif(path_to_sprite)
+        else:
+            self.image = Image.open(path_to_sprite)
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size
         super().__init__(path_to_sprite, 1.5 * self.scale_factor, hit_box_algorithm='Simple')
