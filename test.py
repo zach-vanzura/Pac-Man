@@ -102,7 +102,7 @@ tile_textures = [
     "=..........................=",
     "C==========================C",
     "############################",
-    "############################",
+    "##############+#############",
 ]
 
 tile_orientations = [
@@ -252,9 +252,23 @@ class GameView(arcade.Window):
                     continue
                 else:
                     texture = tile_textures[row][col]
-                    orientation = tile_orientations[row][col]
-                    self.tile_sprite = Tile(TILE_SIZE, center_x, center_y, texture, orientation)
-                    self.tile_list.append(self.tile_sprite)
+
+                    if texture == '+':
+                        self.logo_sprite = arcade.Sprite("images/pac-man-logo.png", scale=0.1)
+                        self.logo_sprite.center_x = center_x
+                        self.logo_sprite.center_y = center_y + 10
+
+                        # need hasattr or it won't work - adds it to sprite list
+                        if not hasattr(self, "logo_list"):
+                            self.logo_list = arcade.SpriteList()
+
+                        self.logo_list.append(self.logo_sprite)
+
+                    else:
+                        orientation = tile_orientations[row][col]
+                        self.tile_sprite = Tile(TILE_SIZE, center_x, center_y, texture, orientation)
+                        self.tile_list.append(self.tile_sprite)
+
                 center_x += TILE_SIZE
             center_y -= TILE_SIZE  # increment y position at each level
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
@@ -274,6 +288,7 @@ class GameView(arcade.Window):
         self.controllable_list.draw()
         # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
         self.ghosts.draw()
+        self.logo_list.draw()
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -422,8 +437,6 @@ class GameView(arcade.Window):
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
         self.tile_center_x = self.curr_col * TILE_SIZE + TILE_SIZE // 2
-
-
 
 
 
