@@ -212,6 +212,9 @@ class GameView(arcade.Window):
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
 
+        arcade.load_font("PixeloidSans-Bold.ttf")
+        self.font_name = "PixeloidSans-Bold"
+
         # Center of the screen (spawn room)
         spawn_x = SCREEN_WIDTH // 2
         spawn_y = SCREEN_HEIGHT // 2
@@ -289,6 +292,10 @@ class GameView(arcade.Window):
         # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
         self.ghosts.draw()
         self.logo_list.draw()
+
+        score_text = self.player_sprite.score
+        arcade.draw_text(score_text, 20, SCREEN_HEIGHT - 40, arcade.color.WHITE, 14, font_name=self.font_name, anchor_x="left")
+        arcade.draw_text("HIGH SCORE", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30, arcade.color.WHITE, 14, anchor_x="center")
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
