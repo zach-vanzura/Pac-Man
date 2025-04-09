@@ -295,7 +295,7 @@ class GameView(arcade.Window):
             center_y -= TILE_SIZE  # increment y position at each level
 
         # Implement Database
-        playerId = 1 # alter if additional player is added
+        playerId = "1" # alter if additional player is added
         con = sqlite3.connect("pacman_score.db", isolation_level=None)
         cur = con.cursor()
         cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
@@ -372,7 +372,7 @@ class GameView(arcade.Window):
             print(self.player_sprite.score)
 
             # Implement Database
-            playerId = 1 # alter if additional player is added
+            playerId = "1" # alter if additional player is added
             con = sqlite3.connect("pacman_score.db", isolation_level=None)
             cur = con.cursor()
             cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{playerId}";')
@@ -440,7 +440,7 @@ class GameView(arcade.Window):
             cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
             count = cur.fetchone()
 
-            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count}";')
+            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
             con.commit()
 
             cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')

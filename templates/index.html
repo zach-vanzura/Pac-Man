@@ -108,5 +108,24 @@
         </div>
     </div>
 
+<div class="container"></div>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">Player</th>
+        <th scope="col">Score</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in leaderboard_info %}
+    <tr>
+        <td>{{ row.player }}</td>
+        <td>{{ row.score }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
 </body>
 </html>
