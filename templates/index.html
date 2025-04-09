@@ -2,19 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Flask + Bootstrap App</title>
-<!--    install bootstap which is used to customize index-->
+    <title>Pac-Man Arcade</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+
+        html, body {
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    }
+
+    body {
+        background-color: #000;
+        color: #fff;
+        font-family: 'Press Start 2P', cursive;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    .background-character {
+        position: absolute;
+        opacity: 0.15;
+        z-index: 0;
+        max-width: 40vw;
+        pointer-events: none;
+    }
+
+    .left-background {
+        top: 5%;
+        left: 0;
+        transform: translateX(-10%);
+    }
+
+    .left-background-2 {
+        top: 60%;
+        left: 0;
+        transform: translateX(-15%);
+    }
+
+    .right-background {
+        top: 0;
+        right: 0;
+        transform: translateX(10%);
+    }
+
+    .right-background-2 {
+        top: 55%;
+        right: 0;
+        transform: translateX(15%);
+    }
+
+    .main-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    text-align: center;
+    padding: 0;
+}
+
+
+    .main-arcade {
+        border: 10px solid #FFD700;
+        padding: 20px;
+        background-color: #111;
+        box-shadow: 0 0 40px #FFD700;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .main-arcade img {
+        width: 100%;
+        height: auto;
+    }
+
+    h1 {
+        margin-bottom: 2rem;
+    }
+
+    .ghost-smaller {
+        max-width: 25vw;
+    }
+
+</style>
 </head>
 <body>
 
-<div class="container px-5 py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-10">
-            <h1 class="text-warning text-center"><b>PAC-MAN GAME</b></h1>
+
+    <img src="{{ url_for('static', filename='website-images/orange-ghost-pixel.png') }}" class="background-character left-background ghost-smaller" alt="Orange Ghost">
+    <img src="{{ url_for('static', filename='website-images/pac-man-red-shoes.png') }}" class="background-character left-background-2" alt="Pac-Man">
+    <img src="{{ url_for('static', filename='website-images/pinky-orange-gloves.webp') }}" class="background-character right-background" alt="Pinky">
+    <img src="{{ url_for('static', filename='website-images/yellow-funky-guy.webp') }}" class="background-character right-background-2" alt="Yellow Funky">
+
+
+    <div class="main-content">
+        <h1>PAC-MAN</h1>
+        <div class="main-arcade">
+            <img src="{{ url_for('static', filename='website-images/pac-man-02.webp') }}" alt="Arcade Pac-Man">
         </div>
     </div>
-</div>
 
 </body>
 </html>
