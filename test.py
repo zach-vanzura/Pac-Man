@@ -357,7 +357,7 @@ class GameView(arcade.Window):
         if self.right_pressed and self.next_x_pos not in can_move_tiles and self.curr_col != NUM_COLS - 1:  # needed for tunnel
             self.player_sprite.center_x = self.tile_center_x - TILE_SIZE // 4
 
-        self.physics_engine.update()
+        #self.physics_engine.update()
         self.controllable_list.update(delta_time)
 
         # find all sprites that will collide with the pac man

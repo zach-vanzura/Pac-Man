@@ -60,7 +60,6 @@ class Controllable(arcade.Sprite):
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
-        self.is_player = is_player
 
         # Movement attributes
         self.direction = None
