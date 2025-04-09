@@ -60,6 +60,8 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player movement speed
 MOVEMENT_SPEED = 2
 
+GHOST_SPEED = 1
+
 class Symbols(Enum):
     PELLET = '.'
     ENERGIZER = 'o'
@@ -193,6 +195,8 @@ class GameView(arcade.Window):
         self.up_pressed = False
         self.down_pressed = False
         self.buffered_key = False
+        
+        # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
         # Set background color
@@ -215,24 +219,39 @@ class GameView(arcade.Window):
         arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
 
-        # Center of the screen (spawn room)
-        spawn_x = SCREEN_WIDTH // 2
-        spawn_y = SCREEN_HEIGHT // 2
+        arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
+        self.font_name = "PixeloidSans-Bold"
 
-        # Create ghosts with AI
+        # Create ghosts
         self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
         self.pinky = Ghost("images/pinky.png", "Pinky", self.player_sprite, self.tile_list)
         self.inky = Ghost("images/inky.png", "Inky", self.player_sprite, self.tile_list, blinky=self.blinky)
         self.clyde = Ghost("images/clyde.png", "Clyde", self.player_sprite, self.tile_list)
 
-        # Position them staggered in spawn room
-        offsets = [-TILE_SIZE, 0, TILE_SIZE, TILE_SIZE * 2]
-        for i, ghost in enumerate([self.blinky, self.pinky, self.inky, self.clyde]):
-            ghost.center_x = spawn_x + offsets[i]
-            ghost.center_y = spawn_y
-
         self.ghosts = arcade.SpriteList()
         self.ghosts.extend([self.blinky, self.pinky, self.inky, self.clyde])
+
+        # Add ghosts to controllable list
+        self.controllable_list.extend(self.ghosts)
+
+        # Position ghosts
+        spawn_x = TILE_SIZE * (NUM_COLS // 2) + TILE_SIZE // 2
+        spawn_y = TILE_SIZE * (NUM_ROWS // 2) + TILE_SIZE // 2
+        offsets = [-TILE_SIZE, 0, TILE_SIZE, TILE_SIZE * 2]
+        for i, ghost in enumerate(self.ghosts):
+            ghost.center_x = spawn_x + offsets[i]
+            ghost.center_y = spawn_y
+            ghost.is_chasing = True
+            ghost.is_scattering = False
+            ghost.is_frightened = False
+            ghost.is_edible = False
+
+        # Physics engines
+        self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
+        
+        self.ghost_physics_engines = [
+            arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
+        ]
 
         # go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
@@ -274,7 +293,6 @@ class GameView(arcade.Window):
 
                 center_x += TILE_SIZE
             center_y -= TILE_SIZE  # increment y position at each level
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
 
         # Implement Database
         playerId = 1 # alter if additional player is added
@@ -317,6 +335,10 @@ class GameView(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        self.player_physics_engine.update()
+        for engine in self.ghost_physics_engines:
+            engine.update()
+        
         # position checks before collision checks
 
         # check the next tile, up, down, left, or right is within bounds
@@ -337,7 +359,8 @@ class GameView(arcade.Window):
 
         self.physics_engine.update()
         self.controllable_list.update(delta_time)
-        # find all sprites tha will collide with the pac man
+
+        # find all sprites that will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
             # this check isn't really necessary right now, but it may be helpful in the future with ghosts
@@ -357,6 +380,51 @@ class GameView(arcade.Window):
 
         for sprite in self.consumable_list:
             sprite.update()
+
+        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
+        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # check the next tile, up, down, left, or right is within bounds
+        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
+        next_y_neg = in_bounds(curr_row + 1, curr_col)
+        next_x_pos = in_bounds(curr_row, curr_col + 1)
+        next_x_neg = in_bounds(curr_row, curr_col - 1)
+
+        if self.up_pressed and next_y_pos not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y + 1.5
+        if self.down_pressed and next_y_neg not in can_move_tiles:
+            self.player_sprite.center_y = tile_center_y - 1.5
+        if self.left_pressed and next_x_neg not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x - 1.5
+        if self.right_pressed and next_x_pos not in can_move_tiles:
+            self.player_sprite.center_x = tile_center_x + 1.5
+
+
+
+        for ghost in self.ghosts:
+            ghost.update()
+            curr_row_ghost = NUM_ROWS - 1 - int(ghost.center_y // TILE_SIZE)
+            curr_col_ghost = int(ghost.center_x // TILE_SIZE)
+            tile_center_y_ghost = int(ghost.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
+            tile_center_x_ghost = curr_col_ghost * TILE_SIZE + TILE_SIZE // 2
+
+            # check the next tile, up, down, left, or right is within bounds
+            next_y_pos_ghost = in_bounds(curr_row_ghost - 1, curr_col_ghost)  # going up, decrement index
+            next_y_neg_ghost = in_bounds(curr_row_ghost + 1, curr_col_ghost)
+            next_x_pos_ghost = in_bounds(curr_row_ghost, curr_col_ghost + 1)
+            next_x_neg_ghost = in_bounds(curr_row_ghost, curr_col_ghost - 1)
+
+            if self.up_pressed and next_y_pos_ghost not in can_move_tiles:
+                ghost.center_y = tile_center_y_ghost + 1.5
+            if self.down_pressed and next_y_neg_ghost not in can_move_tiles:
+                ghost.center_y = tile_center_y_ghost - 1.5
+            if self.left_pressed and next_x_neg_ghost not in can_move_tiles:
+                ghost.center_x = tile_center_x_ghost - 1.5
+            if self.right_pressed and next_x_pos_ghost not in can_move_tiles:
+                ghost.center_x = tile_center_x_ghost + 1.5
+
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
@@ -381,7 +449,6 @@ class GameView(arcade.Window):
             cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
             con.commit()
 
-        self.ghosts.update()
 
     def on_key_press(self, key, key_modifiers):
         """
