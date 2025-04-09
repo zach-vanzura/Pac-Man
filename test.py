@@ -7,7 +7,7 @@ from controllable import *
 from consumables.cherry import Cherry
 from consumables.galaxian import Galaxian
 from consumables.pellet_energizer import EnergizerPellet as Energizer
-# from consumables.key import Key
+from consumables.key import Key
 from consumables.melon import Melon
 from consumables.orange import Orange
 from consumables.pellet_small import Pellet
@@ -212,7 +212,7 @@ class GameView(arcade.Window):
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
 
-        arcade.load_font("PixeloidSans-Bold.ttf")
+        arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
 
         # Center of the screen (spawn room)
