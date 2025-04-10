@@ -6,126 +6,168 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-
         html, body {
-    height: 100vh;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-    }
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-        background-color: #000;
-        color: #fff;
-        font-family: 'Press Start 2P', cursive;
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden;
-    }
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            overflow-x: hidden;
+        }
 
-    .background-character {
+        .background-character {
+            position: absolute;
+            opacity: 0.15;
+            z-index: 0;
+            max-width: 40vw;
+            pointer-events: none;
+        }
+
+        .left-background {
+            top: 100px;
+            left: 150px;
+            transform: none;
+        }
+
+        .left-background-2 {
+            top: 60%;
+            left: 0;
+            transform: translateX(-15%);
+        }
+
+        .right-background {
+            top: 0;
+            right: 0;
+            transform: translateX(10%);
+        }
+
+        .right-background-2 {
+            top: 55%;
+            right: 0;
+            transform: translateX(15%);
+        }
+
+        .main-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding-top: 60px;
+            padding-left: 120px;
+            position: relative;
+            z-index: 1;
+        }
+
+
+    .leaderboard {
         position: absolute;
-        opacity: 0.15;
-        z-index: 0;
-        max-width: 40vw;
-        pointer-events: none;
-    }
-
-    .left-background {
-        top: 5%;
-        left: 0;
-        transform: translateX(-10%);
-    }
-
-    .left-background-2 {
-        top: 60%;
-        left: 0;
-        transform: translateX(-15%);
-    }
-
-    .right-background {
-        top: 0;
-        right: 0;
-        transform: translateX(10%);
-    }
-
-    .right-background-2 {
-        top: 55%;
-        right: 0;
-        transform: translateX(15%);
-    }
-
-    .main-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    height: 100vh;
-    text-align: center;
-    padding: 0;
-}
-
-
-    .main-arcade {
-        border: 10px solid #FFD700;
-        padding: 20px;
+        top: 80px;
+        left: 40px;
         background-color: #111;
-        box-shadow: 0 0 40px #FFD700;
-        max-width: 500px;
-        width: 100%;
+        border: 5px solid #FFD700;
+        padding: 20px;
+        box-shadow: 0 0 20px #FFD700;
+        font-size: 14px;
+        width: 300px;
+        color: white;
+        z-index: 2;
     }
 
-    .main-arcade img {
-        width: 100%;
-        height: auto;
-    }
+        .leaderboard h2 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: white;
+        }
 
-    h1 {
-        margin-bottom: 2rem;
-    }
+        .table th,
+        .table td {
+            color: white !important;
+            border-color: #FFD700 !important;
+        }
 
-    .ghost-smaller {
-        max-width: 25vw;
-    }
+        .main-arcade {
+            border: 10px solid #FFD700;
+            padding: 20px;
+            background-color: #111;
+            box-shadow: 0 0 40px #FFD700;
+            width: 500px;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-</style>
+        .main-arcade img {
+            width: 100%;
+            height: auto;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .ghost-smaller {
+            max-width: 25vw;
+        }
+
+        .arcade-btn {
+            background-color: #FFD700;
+            color: #000;
+            border: 3px solid #fff;
+            font-size: 14px;
+            font-family: 'Press Start 2P', cursive;
+            padding: 12px 30px;
+            box-shadow: 0 0 20px #FFD700;
+            text-shadow: none;
+            transition: transform 0.1s ease-in-out, background-color 0.3s;
+        }
+
+        .arcade-btn:hover {
+            background-color: #fff700;
+            transform: scale(1.05);
+            color: #000;
+        }
+
+    </style>
 </head>
 <body>
 
+<img src="{{ url_for('static', filename='website-images/orange-ghost-pixel.png') }}" class="background-character left-background ghost-smaller" alt="Orange Ghost">
+<img src="{{ url_for('static', filename='website-images/pac-man-red-shoes.png') }}" class="background-character left-background-2" alt="Pac-Man">
+<img src="{{ url_for('static', filename='website-images/pinky-orange-gloves.webp') }}" class="background-character right-background" alt="Pinky">
+<img src="{{ url_for('static', filename='website-images/yellow-funky-guy.webp') }}" class="background-character right-background-2" alt="Yellow Funky">
 
-    <img src="{{ url_for('static', filename='website-images/orange-ghost-pixel.png') }}" class="background-character left-background ghost-smaller" alt="Orange Ghost">
-    <img src="{{ url_for('static', filename='website-images/pac-man-red-shoes.png') }}" class="background-character left-background-2" alt="Pac-Man">
-    <img src="{{ url_for('static', filename='website-images/pinky-orange-gloves.webp') }}" class="background-character right-background" alt="Pinky">
-    <img src="{{ url_for('static', filename='website-images/yellow-funky-guy.webp') }}" class="background-character right-background-2" alt="Yellow Funky">
-
-
-    <div class="main-content">
-        <h1>PAC-MAN</h1>
-        <div class="main-arcade">
-            <img src="{{ url_for('static', filename='website-images/pac-man-02.webp') }}" alt="Arcade Pac-Man">
-        </div>
+<div class="main-wrapper">
+    <div class="leaderboard">
+        <h2>Leaderboard</h2>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Player</th>
+                    <th scope="col">Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in leaderboard_info %}
+                <tr>
+                    <td>{{ row.player }}</td>
+                    <td>{{ row.score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-<div class="container"></div>
-
-<table class="table">
-    <thead>
-    <tr>
-        <th scope="col">Player</th>
-        <th scope="col">Score</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for row in leaderboard_info %}
-    <tr>
-        <td>{{ row.player }}</td>
-        <td>{{ row.score }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <div class="main-arcade">
+        <img src="{{ url_for('static', filename='website-images/pac-man-02.webp') }}" alt="Arcade Pac-Man">
+        <a href="{{ url_for('play') }}" class="btn arcade-btn mt-4">PLAY</a>
+    </div>
+</div>
 
 </body>
 </html>

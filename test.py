@@ -1,6 +1,9 @@
 # TODO: Begin using pylint
 
 import arcade
+# imports for initial screeen
+from arcade import Text
+from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
 from consumables.apple import Apple
 from consumables.bell import Bell
 from controllable import *
@@ -15,6 +18,9 @@ from consumables.strawberry import Strawberry
 from tile import *
 import sqlite3 # included in standard python distribution
 import pandas as pd
+
+
+
 
 """
 CS3050: Software Engineering
@@ -48,7 +54,7 @@ https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
 # etc...
 
 # Set tile size, window height and width
-TILE_SIZE = 24
+TILE_SIZE = 20
 NUM_ROWS = 36
 NUM_COLS = 28
 SCREEN_HEIGHT = NUM_ROWS * TILE_SIZE  # 36 rows
@@ -176,6 +182,14 @@ class GameView(arcade.Window):
         # Call the parent class initializer
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
 
+        def __init__(self):
+            super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
+
+        # load in this font
+        arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
+        self.font_name = "PixeloidSans-Bold"
+
+
         # Variables that will hold sprite lists
         self.curr_row = None
         self.wall_collisions = None
@@ -195,7 +209,38 @@ class GameView(arcade.Window):
         self.up_pressed = False
         self.down_pressed = False
         self.buffered_key = False
-        
+
+
+        # initials
+        self.show_initials_screen = False
+        self.initials = ""
+        self.score_submitted = False
+
+        self.initials_bg = create_rectangle_filled(
+            SCREEN_WIDTH // 2,
+            SCREEN_HEIGHT // 2,
+            300,
+            180,
+            arcade.color.BLACK
+        )
+
+        self.initials_border = create_rectangle_outline(
+            SCREEN_WIDTH // 2,
+            SCREEN_HEIGHT // 2,
+            300,
+            180,
+            arcade.color.YELLOW,
+            border_width=4
+        )
+
+        self.initials_prompt = Text(
+            "WRITE YOUR INITIALS",
+            SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50,
+            color=arcade.color.WHITE,
+            font_size=16,
+            anchor_x="center")
+
+
         # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
@@ -215,12 +260,6 @@ class GameView(arcade.Window):
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
-
-        arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
-        self.font_name = "PixeloidSans-Bold"
-
-        arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
-        self.font_name = "PixeloidSans-Bold"
 
         # Create ghosts
         self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
@@ -311,9 +350,50 @@ class GameView(arcade.Window):
         self.ghosts.draw()
         self.logo_list.draw()
 
-        score_text = self.player_sprite.score
-        arcade.draw_text(score_text, 20, SCREEN_HEIGHT - 40, arcade.color.WHITE, 14, font_name=self.font_name, anchor_x="left")
-        arcade.draw_text("HIGH SCORE", SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30, arcade.color.WHITE, 14, anchor_x="center")
+        # funtcion to change the font not working
+        score_text = str(self.player_sprite.score)
+
+        arcade.draw_text(score_text,
+                         20,
+                         SCREEN_HEIGHT - 40,
+                         arcade.color.WHITE,
+                         14,
+                         font_name=self.font_name,
+                         anchor_x="left")
+
+        arcade.draw_text("HIGH SCORE",
+                         SCREEN_WIDTH // 2,
+                         SCREEN_HEIGHT - 30,
+                         arcade.color.WHITE,
+                         16,
+                         anchor_x="center",
+                         font_name="PixeloidSans-Bold")
+
+        # window to submit initials
+        if self.show_initials_screen:
+            self.initials_bg.draw()
+            self.initials_border.draw()
+
+            arcade.draw_text("WRITE YOUR INITIALS",
+                             SCREEN_WIDTH // 2,
+                             SCREEN_HEIGHT // 2 + 50,
+                             arcade.color.WHITE,
+                             16,
+                             anchor_x="center")
+
+            arcade.draw_text(self.initials or "_ _ _",
+                             SCREEN_WIDTH // 2,
+                             SCREEN_HEIGHT // 2 + 5,
+                             arcade.color.WHITE,
+                             28,
+                             anchor_x="center")
+
+            arcade.draw_text("Press ENTER to Submit",
+                             SCREEN_WIDTH // 2,
+                             SCREEN_HEIGHT // 2 - 40,
+                             arcade.color.GRAY,
+                             12,
+                             anchor_x="center")
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
@@ -335,6 +415,10 @@ class GameView(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+        # initials
+        if self.show_initials_screen:
+            return
+
         self.player_physics_engine.update()
         for engine in self.ghost_physics_engines:
             engine.update()
@@ -460,6 +544,19 @@ class GameView(arcade.Window):
         # TODO: change the direction pacman is facing based on key press
 
         # first check if there is a buffered key press before changing the current key press
+        # once you push enter the whole game should close
+        if self.show_initials_screen:
+            if key == arcade.key.BACKSPACE and len(self.initials) > 0:
+                self.initials = self.initials[:-1]
+            elif key == arcade.key.ENTER:
+                self.score_submitted = True
+                self.show_initials_screen = False
+                self.close()
+            return
+
+        if key == arcade.key.ESCAPE:
+            self.show_initials_screen = True
+            return
 
         if abs(self.player_sprite.center_x - self.tile_center_x) < 4:
             if key == arcade.key.UP and self.next_y_pos in can_move_tiles:
@@ -498,8 +595,15 @@ class GameView(arcade.Window):
                 # the next horizontal key isn't a pellet or empty space
                 self.buffered_key = key
 
-        if key == arcade.key.ESCAPE:
-            self.esc_pressed = True
+        # commented out for now
+        # if key == arcade.key.ESCAPE:
+        #     self.esc_pressed = True
+
+    # method to type initials
+    def on_text(self, text):
+        if self.show_initials_screen and not self.score_submitted:
+            if len(self.initials) < 3 and text.isalpha():
+                self.initials += text.upper()
 
     def reset(self):
         """Reset the game to the initial state."""
