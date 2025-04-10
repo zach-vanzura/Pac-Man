@@ -610,7 +610,7 @@ class GameView(arcade.Window):
         # Do changes needed to restart the game here if you want to support that
         pass
 
-    def update_curr_tile(self) -> (int, int):
+    def update_curr_tile(self) -> tuple[int, int]:
         self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
