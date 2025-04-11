@@ -256,7 +256,6 @@ class GameView(arcade.Window):
             anchor_x="center")
 
 
-        # fixme: pressing the esc key doesn't close the window yet
         self.esc_pressed = False
 
         # Set background color
