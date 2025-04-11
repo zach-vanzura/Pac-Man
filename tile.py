@@ -94,10 +94,5 @@ class Tile(arcade.Sprite):
             self.image = orient_image(self.image_path, orientation)
         else:
             self.image = self.image_path
-        
-        if texture == '_':
-            self.properties = {"ghost_passable": True}
-        else:
-            self.properties = {"ghost_passable": False}
 
         super().__init__(self.image, self.scale_factor, center_x, center_y, hit_box_alorithm='Detailed')

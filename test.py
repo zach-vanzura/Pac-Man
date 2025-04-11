@@ -1,7 +1,5 @@
-# TODO: Begin using pylint
-
+# Imports
 import arcade
-# imports for initial screeen
 from arcade import Text
 from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
 from consumables.apple import Apple
@@ -16,11 +14,9 @@ from consumables.orange import Orange
 from consumables.pellet_small import Pellet
 from consumables.strawberry import Strawberry
 from tile import *
-import sqlite3 # included in standard python distribution
+import sqlite3
 import pandas as pd
 import heapq
-
-
 
 
 """
@@ -34,25 +30,6 @@ Group Members:
     Alexa Witkin
 """
 
-"""
-Based on Starting Template Using Window Class in the PyArcade Docs
-Additionally, added components from Better Move By Keyboard
-
-https://api.arcade.academy/en/latest/example_code/starting_template.html#starting-template
-https://api.arcade.academy/en/latest/example_code/sprite_move_keyboard_better.html#sprite-move-keyboard-better
-
-Got the Pac-Man sprite from:
-https://www.stickpng.com/img/games/pac-man/pac-man-plain-yellow
-
-
-- Ashton
-"""
-
-
-# TODO: create start menu screen, add animations, add enemy sprites,
-# add enemy movement and attacking, add settings menu, add alternative sprites (Jason's face),
-# add various menus/start screens/end screens (look up what is actually in pacman),
-# etc...
 
 # Set tile size, window height and width
 TILE_SIZE = 20
@@ -64,17 +41,18 @@ SCREEN_WIDTH = NUM_COLS * TILE_SIZE  # 28 columns
 # Set window title
 WINDOW_TITLE = "PAC-MAN"
 
-# Set player movement speed
+# Set player and ghost movement speed
 MOVEMENT_SPEED = 2
-
 GHOST_SPEED = 1
 
+# Define symbols
 class Symbols(Enum):
     PELLET = '.'
     ENERGIZER = 'o'
     EMPTY_SPACE = '#'
 
 
+# Define tile textures
 tile_textures = [
     "############################",
     "############################",
@@ -114,6 +92,7 @@ tile_textures = [
     "##############+#############",
 ]
 
+# Define tile orientations
 tile_orientations = [
     "############################",
     "############################",
@@ -153,11 +132,14 @@ tile_orientations = [
     "############################",
 ]
 
+# Define the tiles that can be moved through
 can_move_tiles = ['o', '.', '#']
 
+# Define heuristic function for A* algorithm
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
+# Define A* algorithm for Ghost pathfinding
 def astar(start, goal, grid):
     frontier = []
     heapq.heappush(frontier, (0, start))
@@ -195,6 +177,7 @@ def astar(start, goal, grid):
     path.reverse()
     return path
 
+# Define a function to check if a tile is within bounds
 def in_bounds(row, col):
     """
     :param row: the row of the maze
@@ -206,14 +189,11 @@ def in_bounds(row, col):
         return tile_textures[row][col]
     return None  # out-of-bounds, treat as wall
 
-
+# Main GameView class
+# This class is the main application window and handles the game logic
 class GameView(arcade.Window):
     """
     Main application class.
-
-    NOTE: Go ahead and delete the methods you don't need.
-    If you do need a method, delete the 'pass' and replace it
-    with your own code. Don't leave 'pass' in this program.
     """
 
     def __init__(self):
@@ -222,13 +202,9 @@ class GameView(arcade.Window):
         # Call the parent class initializer
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
 
-        def __init__(self):
-            super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, 'Pac Man')
-
         # load in this font
         arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
-
 
         # Variables that will hold sprite lists
         self.curr_row = None
@@ -249,7 +225,6 @@ class GameView(arcade.Window):
         self.up_pressed = False
         self.down_pressed = False
         self.buffered_key = False
-
 
         # initials
         self.show_initials_screen = False
@@ -287,8 +262,11 @@ class GameView(arcade.Window):
         # Set background color
         self.background_color = arcade.color.BLACK
 
+        # Set physics engine to None
         self.physics_engine = None
 
+    # Set up the game
+    # Initialize the game state, load resources, and set up the game window
     def setup(self):
         # initialize lists
         self.tile_list = arcade.SpriteList(use_spatial_hash=True)
@@ -296,17 +274,19 @@ class GameView(arcade.Window):
         self.controllable_list = arcade.SpriteList()
         self.to_be_eaten = arcade.SpriteList()
 
+        # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.controllable_list.append(self.player_sprite)
 
-        # Create ghosts
+        # Initialize the Ghosts sprites
         self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
         self.pinky = Ghost("images/pinky.png", "Pinky", self.player_sprite, self.tile_list)
         self.inky = Ghost("images/inky.png", "Inky", self.player_sprite, self.tile_list, blinky=self.blinky)
         self.clyde = Ghost("images/clyde.png", "Clyde", self.player_sprite, self.tile_list)
 
+        # Add ghosts to the ghosts list
         self.ghosts = arcade.SpriteList()
         self.ghosts.extend([self.blinky, self.pinky, self.inky, self.clyde])
 
@@ -328,12 +308,11 @@ class GameView(arcade.Window):
 
         # Physics engines
         self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
-        
         self.ghost_physics_engines = [
             arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
         ]
 
-        # go through the two lists to get each tile texture and orientation
+        # Go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
         for row in (range(len(tile_textures))):  # iterate over y-axis
             center_x = TILE_SIZE // 2  # reset x pos
@@ -391,7 +370,7 @@ class GameView(arcade.Window):
         self.ghosts.draw()
         self.logo_list.draw()
 
-        # funtcion to change the font not working
+        # function to change the font not working
         score_text = str(self.player_sprite.score)
 
         arcade.draw_text(score_text,
@@ -460,6 +439,7 @@ class GameView(arcade.Window):
         if self.show_initials_screen:
             return
 
+        # Update the physics engine
         self.player_physics_engine.update()
         for engine in self.ghost_physics_engines:
             engine.update()
@@ -488,12 +468,17 @@ class GameView(arcade.Window):
         # find all sprites that will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
-            # this check isn't really necessary right now, but it may be helpful in the future with ghosts
+            # this check isn't really necessary right now, but it may be helpful in the future with ghosts ( it is! )
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
-            # fixme: this does NOT work as intended, pacman bounces off walls and does not move smoothly along the maze
 
+                # Enter frightened mode if Energizer pellet
+                if isinstance(sprite, Energizer):
+                    for ghost in self.ghosts:
+                        ghost.set_mode('frightened')
+
+            # print the score
             print(self.player_sprite.score)
 
             # Implement Database
@@ -503,6 +488,7 @@ class GameView(arcade.Window):
             cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{playerId}";')
             con.commit()
 
+        # update the consumable sprites
         for sprite in self.consumable_list:
             sprite.update()
 
@@ -526,30 +512,8 @@ class GameView(arcade.Window):
         if self.right_pressed and next_x_pos not in can_move_tiles:
             self.player_sprite.center_x = tile_center_x + 1.5
 
-
-
         for ghost in self.ghosts:
             ghost.update()
-            curr_row_ghost = NUM_ROWS - 1 - int(ghost.center_y // TILE_SIZE)
-            curr_col_ghost = int(ghost.center_x // TILE_SIZE)
-            tile_center_y_ghost = int(ghost.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
-            tile_center_x_ghost = curr_col_ghost * TILE_SIZE + TILE_SIZE // 2
-
-            # check the next tile, up, down, left, or right is within bounds
-            next_y_pos_ghost = in_bounds(curr_row_ghost - 1, curr_col_ghost)  # going up, decrement index
-            next_y_neg_ghost = in_bounds(curr_row_ghost + 1, curr_col_ghost)
-            next_x_pos_ghost = in_bounds(curr_row_ghost, curr_col_ghost + 1)
-            next_x_neg_ghost = in_bounds(curr_row_ghost, curr_col_ghost - 1)
-
-            if self.up_pressed and next_y_pos_ghost not in can_move_tiles:
-                ghost.center_y = tile_center_y_ghost + 1.5
-            if self.down_pressed and next_y_neg_ghost not in can_move_tiles:
-                ghost.center_y = tile_center_y_ghost - 1.5
-            if self.left_pressed and next_x_neg_ghost not in can_move_tiles:
-                ghost.center_x = tile_center_x_ghost - 1.5
-            if self.right_pressed and next_x_pos_ghost not in can_move_tiles:
-                ghost.center_x = tile_center_x_ghost + 1.5
-
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
@@ -656,7 +620,6 @@ class GameView(arcade.Window):
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
         self.tile_center_x = self.curr_col * TILE_SIZE + TILE_SIZE // 2
-
 
 
 def main():
