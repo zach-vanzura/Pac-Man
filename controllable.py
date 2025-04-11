@@ -119,6 +119,9 @@ class Ghost(Controllable):
         self.is_scattering = False
         self.is_frightened = False
         self.is_edible = False
+        self.current_path = []
+        self.path_index = 0
+        self.target_px = None
     
     def can_move_to(self, dx, dy):
         """
@@ -196,15 +199,56 @@ class Ghost(Controllable):
         return pacman_tile
 
     def update(self, delta_time: float = 1 / 60):
-        start_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
-        goal_tile = self.get_target_tile()
-        path = astar(start_tile, goal_tile, tile_textures)
+        # Convert pixel -> tile coordinates
+        curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
 
-        if path:
-            next_step = path[0]
-            target_x = next_step[0] * TILE_SIZE + TILE_SIZE // 2
-            target_y = next_step[1] * TILE_SIZE + TILE_SIZE // 2
-            self.change_x = GHOST_SPEED if self.center_x < target_x else -GHOST_SPEED if self.center_x > target_x else 0
-            self.change_y = GHOST_SPEED if self.center_y < target_y else -GHOST_SPEED if self.center_y > target_y else 0
+        if self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px:
+            # We've reached the current target tile; compute next step
+            if not self.current_path or self.path_index >= len(self.current_path):
+                goal_tile = self.get_target_tile()
+                self.current_path = astar(curr_tile, goal_tile, tile_textures)
+                self.path_index = 0
 
-        super().update(delta_time)
+            if self.current_path and self.path_index < len(self.current_path):
+                next_tile = self.current_path[self.path_index]
+                self.path_index += 1
+                # Convert tile -> pixel
+                self.target_px = (
+                    next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
+                    next_tile[1] * TILE_SIZE + TILE_SIZE // 2
+                )
+
+        if self.target_px:
+            dx = self.target_px[0] - self.center_x
+            dy = self.target_px[1] - self.center_y
+
+            # Normalize direction
+            if abs(dx) > abs(dy):
+                self.change_x = GHOST_SPEED if dx > 0 else -GHOST_SPEED
+                self.change_y = 0
+            else:
+                self.change_y = GHOST_SPEED if dy > 0 else -GHOST_SPEED
+                self.change_x = 0
+
+            # Prevent overshooting the tile
+            if abs(dx) < GHOST_SPEED:
+                self.center_x = self.target_px[0]
+                self.change_x = 0
+            else:
+                self.center_x += self.change_x
+
+            if abs(dy) < GHOST_SPEED:
+                self.center_y = self.target_px[1]
+                self.change_y = 0
+            else:
+                self.center_y += self.change_y
+
+        # Update texture orientation
+        if self.change_x < 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+        elif self.change_x > 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+        elif self.change_y > 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
+        elif self.change_y < 0:
+            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
