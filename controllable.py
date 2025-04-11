@@ -19,6 +19,7 @@ import random
 
 SCATTER_DURATION = 7
 CHASE_DURATION = 20
+FRIGHTENED_DURATION = 6
 
 """
 This is the super class for all things controllable in Pac Man: The Player, The Ghosts, **maybe** some walls, 
@@ -115,13 +116,37 @@ class Ghost(Controllable):
         self.player = player
         self.tiles = tiles
         self.blinky = blinky
-        self.is_chasing = False
-        self.is_scattering = False
-        self.is_frightened = False
-        self.is_edible = False
         self.current_path = []
         self.path_index = 0
         self.target_px = None
+
+        self.mode_timer = 0
+        self.mode = 'chase'
+        self.last_mode_switch_time = time.time()
+        self.scatter_targets = {
+            "Blinky": (NUM_COLS - 3, NUM_ROWS - 3),
+            "Pinky": (2, NUM_ROWS - 3),
+            "Inky": (NUM_COLS - 3, 1),
+            "Clyde": (2, 1)
+        }
+        self.frightened_texture = arcade.load_texture("images/scared.png")
+        self.original_texture = self.texture
+
+    def set_mode(self, new_mode):
+        """
+        Set the ghost's mode (scatter, chase, frightened).
+        :param mode: The mode to set (scatter, chase, frightened)
+        """
+        self.mode = new_mode
+        if new_mode in ('scatter', 'chase'):
+            self.texture = self.original_texture
+            self.is_edible = False
+        elif new_mode == 'frightened':
+            self.texture = self.frightened_texture
+            self.is_edible = True
+        # Reset mode timer so the new mode lasts for its full duration
+        self.last_mode_switch_time = time.time()
+
     
     def can_move_to(self, dx, dy):
         """
@@ -144,61 +169,46 @@ class Ghost(Controllable):
     def get_target_tile(self):
         pacman_tile = (self.player.center_x // TILE_SIZE, self.player.center_y // TILE_SIZE)
         
-        if self.ghost_type == "Blinky":
-            if self.is_chasing == True:
-                return pacman_tile
-            elif self.is_scattering == True:
-                return (5, 5)
-            elif self.is_frightened == True:
-                pass
-            else:
-                return pacman_tile
+        if self.mode == 'frightened':
+            # Randomly choose a tile in the maze
+            return (random.randint(0, NUM_COLS - 1), random.randint(0, NUM_ROWS - 1))
         
-        elif self.ghost_type == "Pinky":
-            if self.is_chasing == True:
+        elif self.mode == 'scatter':
+            # Return the scatter target for this ghost
+            return self.scatter_targets[self.ghost_type]
+        
+        elif self.mode == 'chase':
+            if self.ghost_type == "Blinky":
+                    return pacman_tile
+            
+            elif self.ghost_type == "Pinky":
                 offset_x = math.cos(math.radians(self.player.angle)) * 4
                 offset_y = math.sin(math.radians(self.player.angle)) * 4
                 return (pacman_tile[0] + offset_x, pacman_tile[1] + offset_y)
-            elif self.is_scattering == True:
-                return (5, 5)
-            elif self.is_frightened == True:
-                pass
-            else:
-                offset_x = math.cos(math.radians(self.player.angle)) * 4
-                offset_y = math.sin(math.radians(self.player.angle)) * 4
-                return (pacman_tile[0] + offset_x, pacman_tile[1] + offset_y)
-        
-        elif self.ghost_type == "Inky" and self.blinky:
-            if self.is_chasing == True:
-                blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
-                vector_x = (pacman_tile[0] - blinky_tile[0]) * 2
-                vector_y = (pacman_tile[1] - blinky_tile[1]) * 2
-                return (blinky_tile[0] + vector_x, blinky_tile[1] + vector_y)
-            elif self.is_scattering == True:
-                return (5, 5)
-            elif self.is_frightened == True:
-                pass
-            else:
-                blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
-                vector_x = (pacman_tile[0] - blinky_tile[0]) * 2
-                vector_y = (pacman_tile[1] - blinky_tile[1]) * 2
-                return (blinky_tile[0] + vector_x, blinky_tile[1] + vector_y)
-        
-        elif self.ghost_type == "Clyde":
-            if self.is_chasing == True:
-                distance = math.hypot(self.center_x - self.player.center_x, self.center_y - self.player.center_y)
-                return pacman_tile if distance > TILE_SIZE * 8 else (5, 5)
-            elif self.is_scattering == True:
-                return (5, 5)
-            elif self.is_frightened == True:
-                pass
-            else:
+            
+            elif self.ghost_type == "Inky" and self.blinky:
+                    blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
+                    vector_x = (pacman_tile[0] - blinky_tile[0]) * 2
+                    vector_y = (pacman_tile[1] - blinky_tile[1]) * 2
+                    return (blinky_tile[0] + vector_x, blinky_tile[1] + vector_y)
+            
+            elif self.ghost_type == "Clyde":
                 distance = math.hypot(self.center_x - self.player.center_x, self.center_y - self.player.center_y)
                 return pacman_tile if distance > TILE_SIZE * 8 else (5, 5)
         
-        return pacman_tile
+            return pacman_tile
 
     def update(self, delta_time: float = 1 / 60):
+        current_time = time.time()
+        elapsed_time = current_time - self.last_mode_switch_time
+
+        if self.mode == 'scatter' and elapsed_time > SCATTER_DURATION:
+            self.set_mode('chase')
+        elif self.mode == 'chase' and elapsed_time > CHASE_DURATION:
+            self.set_mode('scatter')
+        elif self.mode == 'frightened' and elapsed_time > FRIGHTENED_DURATION:
+            self.set_mode('scatter')
+
         # Convert pixel -> tile coordinates
         curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
 
@@ -244,11 +254,12 @@ class Ghost(Controllable):
                 self.center_y += self.change_y
 
         # Update texture orientation
-        if self.change_x < 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
-        elif self.change_x > 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
-        elif self.change_y > 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
-        elif self.change_y < 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
+        if self.mode != 'frightened':
+            if self.change_x < 0:
+                self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+            elif self.change_x > 0:
+                self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+            #elif self.change_y > 0:
+                #self.texture = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
+            #elif self.change_y < 0:
+                #self.texture = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
