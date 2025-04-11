@@ -306,6 +306,13 @@ class GameView(arcade.Window):
         self.clyde.center_x = spawn_x + TILE_SIZE
         self.clyde.center_y = spawn_y
 
+        # Record the spawn points so ghosts can return here when eaten.
+        # Send blinky to the same spawn as inky so he goes back into spawn room
+        self.blinky.spawn_point = (self.inky.center_x, self.inky.center_y)
+        self.pinky.spawn_point = (self.pinky.center_x, self.pinky.center_y)
+        self.inky.spawn_point = (self.inky.center_x, self.inky.center_y)
+        self.clyde.spawn_point = (self.clyde.center_x, self.clyde.center_y)
+
         # Physics engines
         self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
         self.ghost_physics_engines = [
@@ -491,6 +498,19 @@ class GameView(arcade.Window):
         # update the consumable sprites
         for sprite in self.consumable_list:
             sprite.update()
+        
+        # Collision check with ghosts:
+        ghost_hit_list = self.player_sprite.collides_with_list(self.ghosts)
+        for ghost in ghost_hit_list:
+            if ghost.mode == 'frightened':
+                ghost.set_mode('eaten')
+                # Award points for eating the ghost (use ghost.score if defined, or default to 200)
+                ghost.score = 200
+                self.player_sprite.score += ghost.score
+            else:
+                # handle collision with a ghost that is not frightened (e.g., lose a life)
+                pass
+
 
         curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         curr_col = int(self.player_sprite.center_x // TILE_SIZE)
