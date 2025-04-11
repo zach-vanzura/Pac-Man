@@ -13,7 +13,7 @@ import arcade
 from PIL import Image, ImageOps
 import math
 from pathlib import Path
-from test import TILE_SIZE, GHOST_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT
+from test import TILE_SIZE, GHOST_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar
 import time
 import random
 
@@ -196,7 +196,15 @@ class Ghost(Controllable):
         return pacman_tile
 
     def update(self, delta_time: float = 1 / 60):
-        target_x, target_y = [t * TILE_SIZE for t in self.get_target_tile()]
-        self.change_x = GHOST_SPEED if self.center_x < target_x else -GHOST_SPEED if self.center_x > target_x else 0
-        self.change_y = GHOST_SPEED if self.center_y < target_y else -GHOST_SPEED if self.center_y > target_y else 0
+        start_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
+        goal_tile = self.get_target_tile()
+        path = astar(start_tile, goal_tile, tile_textures)
+
+        if path:
+            next_step = path[0]
+            target_x = next_step[0] * TILE_SIZE + TILE_SIZE // 2
+            target_y = next_step[1] * TILE_SIZE + TILE_SIZE // 2
+            self.change_x = GHOST_SPEED if self.center_x < target_x else -GHOST_SPEED if self.center_x > target_x else 0
+            self.change_y = GHOST_SPEED if self.center_y < target_y else -GHOST_SPEED if self.center_y > target_y else 0
+
         super().update(delta_time)

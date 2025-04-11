@@ -18,6 +18,7 @@ from consumables.strawberry import Strawberry
 from tile import *
 import sqlite3 # included in standard python distribution
 import pandas as pd
+import heapq
 
 
 
@@ -154,6 +155,45 @@ tile_orientations = [
 
 can_move_tiles = ['o', '.', '#']
 
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+def astar(start, goal, grid):
+    frontier = []
+    heapq.heappush(frontier, (0, start))
+    came_from = {start: None}
+    cost_so_far = {start: 0}
+
+    while frontier:
+        _, current = heapq.heappop(frontier)
+
+        if current == goal:
+            break
+
+        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            next_node = (current[0] + dx, current[1] + dy)
+            if 0 <= next_node[0] < NUM_COLS and 0 <= next_node[1] < NUM_ROWS:
+                tile = tile_textures[NUM_ROWS - 1 - next_node[1]][next_node[0]]
+                if tile not in can_move_tiles and tile != '_':
+                    continue
+                new_cost = cost_so_far[current] + 1
+                if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
+                    cost_so_far[next_node] = new_cost
+                    priority = new_cost + heuristic(goal, next_node)
+                    heapq.heappush(frontier, (priority, next_node))
+                    came_from[next_node] = current
+
+    # Reconstruct path
+    if goal not in came_from:
+        return []
+
+    path = []
+    current = goal
+    while current != start:
+        path.append(current)
+        current = came_from[current]
+    path.reverse()
+    return path
 
 def in_bounds(row, col):
     """
@@ -273,17 +313,18 @@ class GameView(arcade.Window):
         # Add ghosts to controllable list
         self.controllable_list.extend(self.ghosts)
 
-        # Position ghosts
-        spawn_x = TILE_SIZE * (NUM_COLS // 2) + TILE_SIZE // 2
-        spawn_y = TILE_SIZE * (NUM_ROWS // 2) + TILE_SIZE // 2
-        offsets = [-TILE_SIZE, 0, TILE_SIZE, TILE_SIZE * 2]
-        for i, ghost in enumerate(self.ghosts):
-            ghost.center_x = spawn_x + offsets[i]
-            ghost.center_y = spawn_y
-            ghost.is_chasing = True
-            ghost.is_scattering = False
-            ghost.is_frightened = False
-            ghost.is_edible = False
+        self.blinky.center_x = TILE_SIZE * 13 + TILE_SIZE // 2  # middle of gate
+        self.blinky.center_y = TILE_SIZE * 18 + TILE_SIZE       # just above the gate
+
+        # Pinky, Inky, Clyde inside spawn:
+        spawn_x = TILE_SIZE * 13 + TILE_SIZE // 2
+        spawn_y = TILE_SIZE * 18 - TILE_SIZE
+        self.pinky.center_x = spawn_x - TILE_SIZE
+        self.pinky.center_y = spawn_y
+        self.inky.center_x = spawn_x
+        self.inky.center_y = spawn_y
+        self.clyde.center_x = spawn_x + TILE_SIZE
+        self.clyde.center_y = spawn_y
 
         # Physics engines
         self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
