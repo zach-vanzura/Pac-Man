@@ -259,6 +259,8 @@ class GameView(arcade.Window):
 
         self.physics_engine = None
 
+        self.first_render = True  # New flag to detect the first render
+
     # Set up the game
     # Initialize the game state, load resources, and set up the game window
     def setup(self):
@@ -386,6 +388,11 @@ class GameView(arcade.Window):
         self.pause_timer = PAUSE
 
     def on_draw(self):
+
+        if self.first_render:
+            self.death_pause_start = time.time()  # Set the start time for the pause
+            self.first_render = False  # Set the flag to False after the first render
+        
         self.clear()
         self.tile_list.draw()
         self.consumable_list.draw()
