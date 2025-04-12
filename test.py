@@ -689,10 +689,22 @@ class GameView(arcade.Window):
             ghost.path_index = 0
 
     def update_curr_tile(self):
+        """
+        Update the player's current tile and the adjacent tiles.
+        """
+        # Calculate the player's current row and column
         self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+
+        # Calculate the center of the current tile
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
         self.tile_center_x = self.curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # Check the adjacent tiles
+        self.next_y_pos = in_bounds(self.curr_row - 1, self.curr_col)  # Tile above
+        self.next_y_neg = in_bounds(self.curr_row + 1, self.curr_col)  # Tile below
+        self.next_x_pos = in_bounds(self.curr_row, self.curr_col + 1)  # Tile to the right
+        self.next_x_neg = in_bounds(self.curr_row, self.curr_col - 1)  # Tile to the left
 
     def reset_level(self):
         """
