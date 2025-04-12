@@ -18,7 +18,7 @@ Main this class focuses on the pellets, the energizers (the big pellets) and the
 
 
 class Consumable(arcade.Sprite):
-    def __init__(self, path_to_sprite, tile_size, window_width, window_height):
+    def __init__(self, path_to_sprite, tile_size):
         self.image = Image.open(path_to_sprite)
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size

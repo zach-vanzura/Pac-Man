@@ -37,23 +37,8 @@ class Controllable(arcade.Sprite):
     # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
     def __init__(self, path_to_sprite, tile_size):
         self.txtrs = []
-        self.image_ = Image.open(path_to_sprite)
-        self.image = self.image_.convert('RGBA')
-        # right facing
-        self.txtr = arcade.Texture(self.image)
-        self.txtrs.append(self.txtr)
-        # up facing, rotation is anticlockwise
-        self.image_up = self.image.rotate(90)
-        self.txtr = arcade.Texture(self.image_up)
-        self.txtrs.append(self.txtr)
-        #down facing
-        self.image_down = self.image_up.rotate(180)
-        self.txtr = arcade.Texture(self.image_down)
-        self.txtrs.append(self.txtr)
-        # start left facing so left txtr is last so it is current at startup
-        self.image_left = self.image.rotate(180)
-        self.txtr = arcade.Texture(self.image_left)
-        self.txtrs.append(self.txtr)
+        self.image = Image.open(path_to_sprite).convert('RGBA')
+        self.create_direction_textures()
 
         self.original_size = self.image.width
         self.scale_factor = tile_size / self.original_size
@@ -67,6 +52,23 @@ class Controllable(arcade.Sprite):
         self.next_direction = None
         self.change_x = 0
         self.change_y = 0
+
+    def create_direction_textures(self):
+        # right facing
+        self.txtr = arcade.Texture(self.image)
+        self.txtrs.append(self.txtr)
+        # up facing, rotation is anticlockwise
+        self.image_up = self.image.rotate(90)
+        self.txtr = arcade.Texture(self.image_up)
+        self.txtrs.append(self.txtr)
+        # down facing
+        self.image_down = self.image_up.rotate(180)
+        self.txtr = arcade.Texture(self.image_down)
+        self.txtrs.append(self.txtr)
+        # start left facing so left txtr is last so it is current at startup
+        self.image_left = self.image.rotate(180)
+        self.txtr = arcade.Texture(self.image_left)
+        self.txtrs.append(self.txtr)
 
     def update(self, delta_time: float = 1 / 60):
         """ Move the Player Sprite """
@@ -106,7 +108,7 @@ class Controllable(arcade.Sprite):
 
     def is_aligned_to_tile(self):
         return (self.center_x - TILE_SIZE // 2) % TILE_SIZE == 0 and \
-               (self.center_y - TILE_SIZE // 2) % TILE_SIZE == 0
+            (self.center_y - TILE_SIZE // 2) % TILE_SIZE == 0
     
 
 class Ghost(Controllable):

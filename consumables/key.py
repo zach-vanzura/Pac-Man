@@ -8,6 +8,6 @@ from consumable import Consumable
 
 
 class Key(Consumable):
-    def __init__(self, path_to_sprite, scale, window_width, window_height):
-        super().__init__(path_to_sprite, scale, window_width, window_height)
+    def __init__(self, path_to_sprite, scale):
+        super().__init__(path_to_sprite, scale)
         self.score = 5000

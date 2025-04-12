@@ -9,7 +9,7 @@ import os
 
 # TODO: There may need to be more functionality in here based on interactions with pac-man and the ghosts
 class EnergizerPellet(Pellet):
-    def __init__(self, tile_size, window_width, window_height):
-        super().__init__(2 * tile_size, window_width, window_height)
+    def __init__(self, tile_size):
+        super().__init__(2 * tile_size)
         self.score = 50
 

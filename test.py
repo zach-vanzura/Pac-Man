@@ -1,21 +1,17 @@
 # Imports
+import os.path
+
 import arcade
 from arcade import Text
 from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
-from consumables.apple import Apple
-from consumables.bell import Bell
+
+import consumables.strawberry
 from controllable import *
-from consumables.cherry import Cherry
-from consumables.galaxian import Galaxian
+from consumables import *
 from consumables.pellet_energizer import EnergizerPellet as Energizer
-from consumables.key import Key
-from consumables.melon import Melon
-from consumables.orange import Orange
 from consumables.pellet_small import Pellet
-from consumables.strawberry import Strawberry
 from tile import *
 import sqlite3
-import pandas as pd
 import heapq
 
 
@@ -209,7 +205,6 @@ class GameView(arcade.Window):
         arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
 
-        # Variables that will hold sprite lists
         self.curr_row = None
         self.wall_collisions = None
         self.controllable_list = None
@@ -217,10 +212,10 @@ class GameView(arcade.Window):
         self.consumable_list = None
         self.to_be_eaten = None
 
-        # Set up the player info
         self.player_sprite = None
-        self.tile_sprite = None  # pellets wil be added to the tile sprite list
-        self.consumable_sprite = None  # we probably don't need sprites for every fruit
+        self.tile_sprite = None
+        self.consumable_sprite = None
+        self.static_sprites = None # used for the fruit and the pacmen at the bottom of the screen and the upcoming fruit
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -258,13 +253,10 @@ class GameView(arcade.Window):
             font_size=16,
             anchor_x="center")
 
-
         self.esc_pressed = False
 
-        # Set background color
         self.background_color = arcade.color.BLACK
 
-        # Set physics engine to None
         self.physics_engine = None
 
     # Set up the game
@@ -275,6 +267,7 @@ class GameView(arcade.Window):
         self.consumable_list = arcade.SpriteList()
         self.controllable_list = arcade.SpriteList()
         self.to_be_eaten = arcade.SpriteList()
+        self.static_sprites = arcade.SpriteList()
 
         # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
@@ -287,6 +280,13 @@ class GameView(arcade.Window):
         self.POST_RESET_PAUSE_DURATION = PAUSE     # Duration for the pause after resetting positions
         self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)        
         self.controllable_list.append(self.player_sprite)
+
+        # initialize the static sprites at the bottom of the menu, the n-th life is the current player
+        for i in range(self.lives - 1):
+            life = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
+            life.center_y = TILE_SIZE
+            self.static_sprites.append(life)
 
         # Initialize the Ghosts sprites
         self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
@@ -333,12 +333,12 @@ class GameView(arcade.Window):
             for col in (range(len(tile_textures[0]))):  # iterate over x-axis
                 # is pellet
                 if tile_textures[row][col] == Symbols.PELLET.value:
-                    self.consumable_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.consumable_sprite = Pellet(TILE_SIZE)
                     self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(self.consumable_sprite)
                 # is energizer
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
-                    self.consumable_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.consumable_sprite = Energizer(TILE_SIZE)
                     self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(self.consumable_sprite)
                 # is empty space
@@ -387,6 +387,7 @@ class GameView(arcade.Window):
         # self.controllable_list.draw_hit_boxes(color=arcade.color.PINK, line_thickness=1)
         self.ghosts.draw()
         self.logo_list.draw()
+        self.static_sprites.draw()
 
         # function to change the font not working
         score_text = str(self.player_sprite.score)
@@ -407,10 +408,7 @@ class GameView(arcade.Window):
                          anchor_x="center",
                          font_name="PixeloidSans-Bold")
         
-        arcade.draw_text(f"Lives: {self.lives}",
-                 20, SCREEN_HEIGHT - 705,
-                 arcade.color.YELLOW, 14, font_name=self.font_name)
-
+    
         # window to submit initials
         if self.show_initials_screen:
             self.initials_bg.draw()
@@ -560,32 +558,13 @@ class GameView(arcade.Window):
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
+                    self.static_sprites.pop(0) # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
                     self.death_pause_phase = "death"
                     self.death_pause_start = time.time()
                     # Break out of the collision loop to avoid multiple detections.
                     break
-
-        curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
-        curr_col = int(self.player_sprite.center_x // TILE_SIZE)
-        tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
-        tile_center_x = curr_col * TILE_SIZE + TILE_SIZE // 2
-
-        # check the next tile, up, down, left, or right is within bounds
-        next_y_pos = in_bounds(curr_row - 1, curr_col)  # going up, decrement index
-        next_y_neg = in_bounds(curr_row + 1, curr_col)
-        next_x_pos = in_bounds(curr_row, curr_col + 1)
-        next_x_neg = in_bounds(curr_row, curr_col - 1)
-
-        if self.up_pressed and next_y_pos not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y + 1.5
-        if self.down_pressed and next_y_neg not in can_move_tiles:
-            self.player_sprite.center_y = tile_center_y - 1.5
-        if self.left_pressed and next_x_neg not in can_move_tiles:
-            self.player_sprite.center_x = tile_center_x - 1.5
-        if self.right_pressed and next_x_pos not in can_move_tiles:
-            self.player_sprite.center_x = tile_center_x + 1.5
 
         for ghost in self.ghosts:
             ghost.update()
@@ -709,7 +688,7 @@ class GameView(arcade.Window):
             ghost.current_path = []
             ghost.path_index = 0
 
-    def update_curr_tile(self) -> tuple[int, int]:
+    def update_curr_tile(self):
         self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
