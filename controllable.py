@@ -244,37 +244,52 @@ class Ghost(Controllable):
             elif self.mode == 'frightened' and elapsed_time > FRIGHTENED_DURATION:
                 self.set_mode('scatter')
 
-        # --- Special Handling for Eaten Mode: Head Directly to Spawn ---
+
+        # --- Special Handling for Eaten Mode: Head to Spawn Using A* ---
         if self.mode == 'eaten' and self.spawn_point is not None:
-            # Force the target to be exactly the spawn point (no A*)
-            self.target_px = self.spawn_point
-            # Compute difference between current position and spawn.
+            # Compute the current and spawn tiles
+            curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
+            spawn_tile = (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
+            
+            # If we don't have a target point or we reached the current target, recompute the path
+            if self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px:
+                self.current_path = astar(curr_tile, spawn_tile, tile_textures)
+                self.path_index = 0
+                if self.current_path and self.path_index < len(self.current_path):
+                    next_tile = self.current_path[self.path_index]
+                    self.path_index += 1
+                    self.target_px = (
+                        next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
+                        next_tile[1] * TILE_SIZE + TILE_SIZE // 2
+                    )
+            
+            # Compute difference between current position and the target pixel from A*
             dx = self.target_px[0] - self.center_x
             dy = self.target_px[1] - self.center_y
-            # Use a threshold (e.g., 10 pixels) to consider the ghost “at spawn.”
-            threshold = 10
+            threshold = 10  # pixels threshold to consider the ghost "at" spawn
+            
             if abs(dx) < threshold and abs(dy) < threshold:
-                # Snap to spawn exactly.
+                # Snap exactly to the spawn point (or target) once near enough.
                 self.center_x, self.center_y = self.target_px
                 if self.spawn_waiting_start is None:
                     # Start waiting; freeze movement.
                     self.spawn_waiting_start = current_time
                     return
-                elif current_time - self.spawn_waiting_start < 1:
-                    # Still waiting one second.
+                elif current_time - self.spawn_waiting_start < 2:
+                    # Still waiting two second.
                     return
                 else:
-                    # One second has passed – revert mode.
+                    # After one second, revert to the previous mode.
                     self.set_mode(self.previous_mode if self.previous_mode is not None else 'scatter')
                     self.previous_mode = None
                     self.spawn_waiting_start = None
-                    # Clear any stale path data so normal pathfinding resumes.
+                    # Clear stale path data so that normal pathfinding resumes.
                     self.target_px = None
                     self.current_path = []
                     self.path_index = 0
                     # Do not return—allow normal update processing below.
             else:
-                # If not at spawn yet, move directly toward spawn.
+                # Not yet reached the target; move toward it using computed dx, dy.
                 if abs(dx) > abs(dy):
                     self.change_x = GHOST_SPEED if dx > 0 else -GHOST_SPEED
                     self.change_y = 0
@@ -282,7 +297,7 @@ class Ghost(Controllable):
                     self.change_y = GHOST_SPEED if dy > 0 else -GHOST_SPEED
                     self.change_x = 0
 
-                # Move using the computed change values.
+                # Update position using the computed change values.
                 if abs(dx) < GHOST_SPEED:
                     self.center_x = self.target_px[0]
                 else:
@@ -292,7 +307,8 @@ class Ghost(Controllable):
                     self.center_y = self.target_px[1]
                 else:
                     self.center_y += self.change_y
-                return  # Skip normal pathfinding when in eaten mode.
+                return  # Skip executing the normal pathfinding code.
+
 
         # --- Normal Movement/Pathfinding for Non-Eaten Modes ---
         curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
@@ -314,6 +330,7 @@ class Ghost(Controllable):
                     next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
                     next_tile[1] * TILE_SIZE + TILE_SIZE // 2
                 )
+
 
         if self.target_px:
             dx = self.target_px[0] - self.center_x
