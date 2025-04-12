@@ -126,6 +126,8 @@ class Ghost(Controllable):
 
         self.previous_mode = None
         self.spawn_point = None
+        # Immediately set the default ghost texture to the right‐facing texture.
+        self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
         self.original_texture = self.texture
         self.frightened_texture = arcade.load_texture("images/scared.png")
         self.eaten_texture = arcade.load_texture("images/deadeyes.png")
@@ -333,9 +335,8 @@ class Ghost(Controllable):
             else:
                 self.center_y += self.change_y
 
-        # --- Update Texture Orientation for Normal Modes ---
-        if self.mode not in ('frightened', 'eaten'):
-            if self.change_x < 0:
-                self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
-            elif self.change_x > 0:
-                self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+        # if self.mode not in ('frightened', 'eaten'):
+        #     if self.change_x < 0:
+        #         self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+        #     elif self.change_x > 0:
+        #         self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
