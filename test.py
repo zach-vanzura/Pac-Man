@@ -301,6 +301,13 @@ class GameView(arcade.Window):
         # Add ghosts to controllable list
         self.controllable_list.extend(self.ghosts)
 
+        # Ghost spawn room
+        spawn_x = TILE_SIZE * 13.5 + TILE_SIZE // 2
+        spawn_y = TILE_SIZE * 17.5  # original spawn room row
+
+        # Save the ghost spawn room position
+        self.spawn_room_pos = (spawn_x, spawn_y)
+
         # ghost spawn points
         self.blinky.center_x = TILE_SIZE * 13.5 + TILE_SIZE // 2  # middle of gate
         self.blinky.center_y = TILE_SIZE * 20.5 + TILE_SIZE       # moved up by one tile
@@ -392,6 +399,25 @@ class GameView(arcade.Window):
         # function to change the font not working
         score_text = str(self.player_sprite.score)
 
+        # If we are in the "start" pause phase (e.g., at level launch or immediately after a reset)
+        if self.death_pause_phase in ("start", "post_reset"):
+            # Use the saved spawn room coordinates
+            if hasattr(self, "spawn_room_pos"):
+                spawn_x, spawn_y = self.spawn_room_pos
+                # Adjust the y value so that the text is drawn directly under the ghost room.
+                ready_y = spawn_y - TILE_SIZE // 2
+            else:
+                # Fallback (center of screen)
+                spawn_x = SCREEN_WIDTH // 2
+                ready_y = SCREEN_HEIGHT // 2
+
+            arcade.draw_text("READY!",
+                            spawn_x,
+                            ready_y - 40,
+                            arcade.color.YELLOW,
+                            16,
+                            anchor_x="center")
+
         arcade.draw_text(score_text,
                          20,
                          SCREEN_HEIGHT - 40,
@@ -411,6 +437,14 @@ class GameView(arcade.Window):
     
         # window to submit initials
         if self.show_initials_screen:
+            # Draw the GAME OVER header above the initials box.
+            arcade.draw_text("GAME OVER",
+                            SCREEN_WIDTH // 2,
+                            SCREEN_HEIGHT // 2 + 100,  # adjust Y offset to position above the prompt box
+                            arcade.color.RED,
+                            20,
+                            anchor_x="center")
+            
             self.initials_bg.draw()
             self.initials_border.draw()
 
@@ -721,11 +755,11 @@ class GameView(arcade.Window):
             for col in range(len(tile_textures[0])):  # iterate over x-axis
                 # Check the tile character for pellet or energizer.
                 if tile_textures[row][col] == Symbols.PELLET.value:
-                    consumable_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    consumable_sprite = Pellet(TILE_SIZE)
                     consumable_sprite.center_x, consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(consumable_sprite)
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
-                    consumable_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    consumable_sprite = Energizer(TILE_SIZE)
                     consumable_sprite.center_x, consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(consumable_sprite)
                 center_x += TILE_SIZE
