@@ -51,6 +51,9 @@ class Symbols(Enum):
     ENERGIZER = 'o'
     EMPTY_SPACE = '#'
 
+PAUSE = 5
+LIVES = 5
+
 
 # Define tile textures
 tile_textures = [
@@ -265,6 +268,10 @@ class GameView(arcade.Window):
         # Set physics engine to None
         self.physics_engine = None
 
+        # pause for reset and death
+        self.is_paused = False
+        self.pause_timer = 0
+
     # Set up the game
     # Initialize the game state, load resources, and set up the game window
     def setup(self):
@@ -278,6 +285,12 @@ class GameView(arcade.Window):
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
+        self.lives = 5                         # Starting with 5 lives
+        self.death_pause_phase = None          # Will be one of: None, "death", "post_reset"
+        self.death_pause_start = None          # Timestamp when the current pause phase began
+        self.DEATH_PAUSE_DURATION = 5          # Duration for the death collision pause (in seconds)
+        self.POST_RESET_PAUSE_DURATION = 5     # Duration for the pause after resetting positions
+        self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)        
         self.controllable_list.append(self.player_sprite)
 
         # Initialize the Ghosts sprites
@@ -367,6 +380,10 @@ class GameView(arcade.Window):
         cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
         con.commit()
 
+        # Pause the game for 5 seconds at the start
+        self.is_paused = True
+        self.pause_timer = PAUSE
+
     def on_draw(self):
         self.clear()
         self.tile_list.draw()
@@ -395,6 +412,10 @@ class GameView(arcade.Window):
                          16,
                          anchor_x="center",
                          font_name="PixeloidSans-Bold")
+        
+        arcade.draw_text(f"Lives: {self.lives}",
+                 20, SCREEN_HEIGHT - 705,
+                 arcade.color.YELLOW, 14, font_name=self.font_name)
 
         # window to submit initials
         if self.show_initials_screen:
@@ -442,9 +463,36 @@ class GameView(arcade.Window):
         Normally, you'll call update() on the sprite lists that
         need it.
         """
+
         # initials
         if self.show_initials_screen:
             return
+        
+        if self.lives == 0:
+            self.show_initials_screen = True
+        
+        current_time = time.time()
+    
+        # If a death pause phase is active, handle it:
+        if self.death_pause_phase is not None:
+            if self.death_pause_phase == "death":
+                if current_time - self.death_pause_start < self.DEATH_PAUSE_DURATION:
+                    # During the initial death pause, do nothing (freeze frame)
+                    return
+                else:
+                    # Death pause duration is over: Reset positions and start the post-reset pause.
+                    self.reset()
+                    self.death_pause_phase = "post_reset"
+                    self.death_pause_start = current_time
+                    return
+            elif self.death_pause_phase == "post_reset":
+                if current_time - self.death_pause_start < self.POST_RESET_PAUSE_DURATION:
+                    # Still in the post-reset pause: do nothing.
+                    return
+                else:
+                    # Post-reset pause is finished: resume normal game updates.
+                    self.death_pause_phase = None
+                    # Fall through to normal update processing.
 
         # Update the physics engine
         self.player_physics_engine.update()
@@ -499,18 +547,23 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
         
-        # Collision check with ghosts:
-        ghost_hit_list = self.player_sprite.collides_with_list(self.ghosts)
-        for ghost in ghost_hit_list:
-            if ghost.mode == 'frightened':
-                ghost.set_mode('eaten')
-                # Award points for eating the ghost (use ghost.score if defined, or default to 200)
-                ghost.score = 200
-                self.player_sprite.score += ghost.score
-            else:
-                # handle collision with a ghost that is not frightened (e.g., lose a life)
-                pass
-
+       # Collision check with ghosts:
+        if self.death_pause_phase is None:  # Only process collisions if not in a death pause.
+            ghost_hit_list = self.player_sprite.collides_with_list(self.ghosts)
+            for ghost in ghost_hit_list:
+                if ghost.mode == 'frightened':
+                    ghost.set_mode('eaten')
+                    ghost.score = 200   # Award points for eating the ghost.
+                    self.player_sprite.score += ghost.score
+                elif ghost.mode in ('chase', 'scatter'):
+                    # Collision with an active (non-frightened) ghost: register a death.
+                    self.lives -= 1
+                    print(f"Lives remaining: {self.lives}")
+                    # Start the death pause cycle only if not already active.
+                    self.death_pause_phase = "death"
+                    self.death_pause_start = time.time()
+                    # Break out of the collision loop to avoid multiple detections.
+                    break
 
         curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         curr_col = int(self.player_sprite.center_x // TILE_SIZE)
@@ -557,7 +610,7 @@ class GameView(arcade.Window):
 
             cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
             con.commit()
-
+        
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -631,9 +684,22 @@ class GameView(arcade.Window):
                 self.initials += text.upper()
 
     def reset(self):
-        """Reset the game to the initial state."""
-        # Do changes needed to restart the game here if you want to support that
-        pass
+        """
+        Reset Pac-Man and ghost positions to their starting spawn points.
+        Consumables and the current score remain unchanged.
+        """
+        # Reset Pac-Man's position using a stored initial position.
+        self.player_sprite.center_x, self.player_sprite.center_y = self.player_initial_pos
+        
+        # Reset ghosts: iterate through each ghost and reset their positions and mode.
+        for ghost in self.ghosts:
+            if ghost.spawn_point is not None:
+                ghost.center_x, ghost.center_y = ghost.spawn_point
+            # Reset ghost mode to 'chase' (or your default) and clear path data.
+            ghost.set_mode('chase')
+            ghost.target_px = None
+            ghost.current_path = []
+            ghost.path_index = 0
 
     def update_curr_tile(self) -> tuple[int, int]:
         self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
