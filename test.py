@@ -282,7 +282,7 @@ class GameView(arcade.Window):
         self.controllable_list.append(self.player_sprite)
 
         # initialize the static sprites at the bottom of the menu, the n-th life is the current player
-        for i in range(self.lives - 1):
+        for i in range(self.lives):
             life = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
             life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
             life.center_y = TILE_SIZE
@@ -558,7 +558,7 @@ class GameView(arcade.Window):
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
-                    self.static_sprites.pop(0) # remove the first element, this way we can add the fruit to the end
+                    self.static_sprites.pop() # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
                     self.death_pause_phase = "death"
