@@ -123,7 +123,7 @@ class Ghost(Controllable):
         self.target_px = None
 
         self.mode_timer = 0
-        self.mode = 'chase'
+        self.mode = 'scatter'
         self.last_mode_switch_time = time.time()
 
         self.previous_mode = None
