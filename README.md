@@ -17,3 +17,9 @@
 - tile.py creates the tile objects that the map is composed of.
 - my_flask.py holds the python flask and is designed in index.html which is stored in the "templates" folder.
 - pacman_store.db holds the database where the player score are kept.
+
+# Citations
+https://www.deviantart.com/darthbladerpegasus/art/Pac-Man-Arcade-Logo-959562739
+https://pacman.fandom.com/wiki/Pac-Man
+https://tvtropes.org/pmwiki/pmwiki.php/Characters/PacMan
+https://ksagar.com/?k=249672015
