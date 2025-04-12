@@ -618,24 +618,8 @@ class GameView(arcade.Window):
             self.reset_level()
 
         # closing conditions for the game
-        if self.esc_pressed:
-            self.close()
-
-            # Implement Database
-            playerId = input("Enter your name: ")
-            con = sqlite3.connect("pacman_score.db", isolation_level=None)
-            cur = con.cursor()
-            cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
-            count = cur.fetchone()
-
-            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
-            con.commit()
-
-            cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
-            con.commit()
-
-            cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
-            con.commit()
+        # if self.esc_pressed:
+        #     self.close()
         
 
     def on_key_press(self, key, key_modifiers):
@@ -657,6 +641,21 @@ class GameView(arcade.Window):
             elif key == arcade.key.ENTER:
                 self.score_submitted = True
                 self.show_initials_screen = False
+                # Implement Database
+                playerId = self.initials
+                con = sqlite3.connect("pacman_score.db", isolation_level=None)
+                cur = con.cursor()
+                cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
+                count = cur.fetchone()
+
+                cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
+                con.commit()
+
+                cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
+                con.commit()
+
+                cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
+                con.commit()
                 self.close()
             return
 
