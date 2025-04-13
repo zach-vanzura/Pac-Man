@@ -213,12 +213,13 @@ class Ghost(Controllable):
 
         else:
             self.mode = new_mode
-            self.texture = self.original_texture
-            self.is_edible = False
-            self.global_timer_paused_at = None
-            self.current_path = []
-            self.path_index = 0
-            self.target_px = None
+            if new_mode != 'eaten':  # Only restore texture if not still eaten
+                self.texture = self.original_texture
+                self.is_edible = False
+                self.global_timer_paused_at = None
+                self.current_path = []
+                self.path_index = 0
+                self.target_px = None
 
         self.last_mode_switch_time = time.time()
 
@@ -349,18 +350,32 @@ class Ghost(Controllable):
 
             if abs(dx) < threshold and abs(dy) < threshold:
                 self.center_x, self.center_y = self.target_px
-                if not self.spawn_waiting_start:
-                    self.spawn_waiting_start = now
-                    return
-                elif now - self.spawn_waiting_start < 2:
-                    return
+
+                # Ensure ghost is aligned with its spawn tile
+                ghost_tile = (
+                    int(self.center_x // TILE_SIZE),
+                    int(self.center_y // TILE_SIZE)
+                )
+                spawn_tile = (
+                    int(self.spawn_point[0] // TILE_SIZE),
+                    int(self.spawn_point[1] // TILE_SIZE)
+                )
+
+                if ghost_tile == spawn_tile:
+                    if self.spawn_waiting_start is None:
+                        self.spawn_waiting_start = now
+                    elif now - self.spawn_waiting_start >= 2:
+                        self.set_mode(self.previous_mode or 'scatter')
+                        self.previous_mode = None
+                        self.spawn_waiting_start = None
+                        self.target_px = None
+                        self.current_path = []
+                        self.path_index = 0
+                        return
                 else:
-                    self.set_mode(self.previous_mode or 'scatter')
-                    self.previous_mode = None
-                    self.spawn_waiting_start = None
-                    self.target_px = None
-                    self.current_path = []
-                    self.path_index = 0
+                    self.spawn_waiting_start = None  # Reset if ghost left tile early
+
+                return
             else:
                 speed = FRIGHTENED_SPEED if self.mode == 'frightened' else GHOST_SPEED
                 if abs(dx) > abs(dy):

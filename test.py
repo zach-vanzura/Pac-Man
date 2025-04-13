@@ -643,48 +643,40 @@ class GameView(arcade.Window):
         self.controllable_list.update(delta_time)
         self.player_sprite.update_animation()
 
-        #TODO: add all fruits to map
         # Go through the two lists to get each tile texture and orientation
-        center_y = SCREEN_HEIGHT - TILE_SIZE // 2
-        center_x = TILE_SIZE // 2  # reset x pos
+        center_y = 9 * TILE_SIZE + TILE_SIZE // 2
+        center_x = 12 * TILE_SIZE
+        elasped_time = current_time - self.death_pause_start
         print(current_time - self.death_pause_start)
-        if current_time - self.death_pause_start > 10 and tile_textures[20][10] != Symbols.CHERRY.value:
-            tile_textures[20][10] == Symbols.CHERRY.value
+        if 10 < elasped_time < 11 and not any(isinstance(c, Cherry) for c in self.consumable_list):
             self.consumable_sprite = Cherry(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 30 and tile_textures[20][10] != Symbols.STRAWBERRY.value:
-            tile_textures[20][10] == Symbols.STRAWBERRY.value
+        elif 30 < elasped_time < 31 and not any(isinstance(c, Strawberry) for c in self.consumable_list):
             self.consumable_sprite = Strawberry(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 50 and tile_textures[20][10] != Symbols.ORANGE.value:
-            tile_textures[20][10] == Symbols.ORANGE.value
+        elif 50 < elasped_time < 51 and not any(isinstance(c, Orange) for c in self.consumable_list):
             self.consumable_sprite = Orange(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 70 and tile_textures[20][10] != Symbols.APPLE.value:
-            tile_textures[20][10] == Symbols.APPLE.value
+        elif 70 < elasped_time < 71 and not any(isinstance(c, Apple) for c in self.consumable_list):
             self.consumable_sprite = Apple(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 100 and tile_textures[20][10] != Symbols.MELON.value:
-            tile_textures[20][10] == Symbols.MELON.value
+        elif 100 < elasped_time < 101 and not any(isinstance(c, Melon) for c in self.consumable_list):
             self.consumable_sprite = Melon(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 130 and tile_textures[20][10] != Symbols.GALAXIAN.value:
-            tile_textures[20][10] == Symbols.GALAXIAN.value
+        elif 130 < elasped_time < 131 and not any(isinstance(c, Galaxian) for c in self.consumable_list):
             self.consumable_sprite = Galaxian(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 160 and tile_textures[20][10] != Symbols.BELL.value:
-            tile_textures[20][10] == Symbols.BELL.value
+        elif 160 < elasped_time < 161 and not any(isinstance(c, Bell) for c in self.consumable_list):
             self.consumable_sprite = Bell(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
-        elif current_time - self.death_pause_start > 190 and tile_textures[20][10] != Symbols.KEY.value:
-            tile_textures[20][10] == Symbols.KEY.value
+        elif 200 < elasped_time < 201 and not any(isinstance(c, Key) for c in self.consumable_list):
             self.consumable_sprite = Key(TILE_SIZE)
             self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
             self.consumable_list.append(self.consumable_sprite)
@@ -712,6 +704,30 @@ class GameView(arcade.Window):
                     self.powerup_sound.play()
                     for ghost in self.ghosts:
                         ghost.set_mode('frightened')
+
+                elif isinstance(sprite, Cherry):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Strawberry):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Orange):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Melon):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Apple):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Bell):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Key):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Galaxian):
+                    self.powerup_sound.play()
 
             # print the score
             print(self.player_sprite.score)
@@ -763,8 +779,8 @@ class GameView(arcade.Window):
             self.reset_level()
 
         # quick closing conditions for the game
-        if self.esc_pressed:
-            self.close()
+        # if self.esc_pressed:
+            # self.close()
         
 
     def on_key_press(self, key, key_modifiers):
@@ -849,9 +865,6 @@ class GameView(arcade.Window):
                 # the next horizontal key isn't a pellet or empty space
                 self.buffered_key = key
 
-        # commented out for now
-        # if key == arcade.key.ESCAPE:
-        #     self.esc_pressed = True
 
     # method to type initials
     def on_text(self, text):
