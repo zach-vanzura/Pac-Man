@@ -284,7 +284,7 @@ class GameView(arcade.Window):
         self.static_sprites = arcade.SpriteList()
 
         # Initialize the player sprite
-        self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+        self.player_sprite = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.lives = LIVES                         # Starting with 5 lives
@@ -533,6 +533,7 @@ class GameView(arcade.Window):
 
         #self.physics_engine.update()
         self.controllable_list.update(delta_time)
+        self.player_sprite.update_animation()
 
         # find all sprites that will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)

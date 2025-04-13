@@ -47,7 +47,7 @@ class Controllable(arcade.Sprite):
         # default image used for
         self.create_direction_textures()
 
-        self.original_size = self.default_frames[0].width
+        self.original_size = Image.open(path_to_sprite).width
         self.scale_factor = tile_size / self.original_size
         super().__init__(self.txtrs[self.cur_direction][self.cur_texture], 1.5 * self.scale_factor, hit_box_algorithm='Simple')
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
@@ -94,15 +94,15 @@ class Controllable(arcade.Sprite):
         self.center_y += self.change_y
 
         if self.change_x < 0:
-            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+            self.cur_direction = TEXTURE_ORIENTATIONS['LEFT_FACING']
 
             # TODO: change this to double-index the texture list
         elif self.change_x > 0:
-            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+            self.cur_direction = TEXTURE_ORIENTATIONS['RIGHT_FACING']
         elif self.change_y > 0:
-            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
+            self.cur_direction = TEXTURE_ORIENTATIONS['UP_FACING']
         elif self.change_y < 0:
-            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
+            self.cur_direction = TEXTURE_ORIENTATIONS['DOWN_FACING']
 
         # no change in texture if no change in texture
         # TODO: might need an else to continue animation going
