@@ -755,8 +755,8 @@ class GameView(arcade.Window):
             self.reset_level()
 
         # quick closing conditions for the game
-        if self.esc_pressed:
-            self.close()
+        # if self.esc_pressed:
+            # self.close()
         
 
     def on_key_press(self, key, key_modifiers):
