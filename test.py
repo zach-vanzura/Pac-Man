@@ -213,6 +213,14 @@ class GameView(arcade.Window):
         self.background_music = None
         self.background_music_player = None
 
+        # chomp sound when eating pellet
+        self.last_chomp_time = 0
+        self.chomp_cooldown = 0.16
+        self.pellet_chomp_sound = arcade.Sound("sounds/pacman_chomp.wav")
+        self.powerup_sound = arcade.Sound("sounds/pacman_eatfruit.wav")
+        self.ghost_eaten_sound = arcade.Sound("sounds/pacman_eatghost.wav")
+        self.death_sound = arcade.Sound("sounds/pacman_death.wav")
+
         self.curr_row = None
         self.wall_collisions = None
         self.controllable_list = None
@@ -611,8 +619,17 @@ class GameView(arcade.Window):
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
 
+                # play chomp noise
+                if isinstance(sprite, Pellet):
+                    current_time = time.time()
+                    if current_time - self.last_chomp_time >= self.chomp_cooldown:
+                        self.pellet_chomp_sound.play(speed=1.5)
+                        self.last_chomp_time = current_time
+
                 # Enter frightened mode if Energizer pellet
+                # also play noise
                 if isinstance(sprite, Energizer):
+                    self.powerup_sound.play()
                     for ghost in self.ghosts:
                         ghost.set_mode('frightened')
 
@@ -638,12 +655,16 @@ class GameView(arcade.Window):
                     ghost.set_mode('eaten')
                     ghost.score = 200   # Award points for eating the ghost.
                     self.player_sprite.score += ghost.score
+                    # Play ghost eaten sound
+                    self.ghost_eaten_sound.play()
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
                     self.static_sprites.pop() # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
+                    # play death sound
+                    self.death_sound.play()
                     self.death_pause_phase = "death"
                     self.death_pause_start = time.time()
                     # Break out of the collision loop to avoid multiple detections.
