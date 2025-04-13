@@ -215,7 +215,7 @@ class GameView(arcade.Window):
         self.player_sprite = None
         self.tile_sprite = None
         self.consumable_sprite = None
-        self.static_sprites = None # used for the fruit and the pacmen at the bottom of the screen and the upcoming fruit
+        self.static_sprites = None # used for the fruit and the pacman at the bottom of the screen and the upcoming fruit
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -276,11 +276,12 @@ class GameView(arcade.Window):
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.lives = LIVES                         # Starting with 5 lives
-        self.death_pause_phase = "start"          # Will be one of: None, "death", "post_reset", "start"
-        self.death_pause_start = time.time()          # Timestamp when the current pause phase began
+        self.death_pause_phase = "start"           # Will be one of: None, "death", "post_reset", or "start"
+        self.death_pause_start = time.time()       # Timestamp when the current pause phase began
         self.DEATH_PAUSE_DURATION = PAUSE          # Duration for the death collision pause (in seconds)
         self.POST_RESET_PAUSE_DURATION = PAUSE     # Duration for the pause after resetting positions
-        self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)        
+        self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)
+        self.player_sprite.direction = (0, 0)        
         self.controllable_list.append(self.player_sprite)
 
         # initialize the static sprites at the bottom of the menu, the n-th life is the current player
@@ -312,22 +313,28 @@ class GameView(arcade.Window):
 
         # ghost spawn points
         self.blinky.center_x = TILE_SIZE * 13.5 + TILE_SIZE // 2  # middle of gate
-        self.blinky.center_y = TILE_SIZE * 20.5 + TILE_SIZE       # moved up by one tile
+        self.blinky.center_y = TILE_SIZE * 20.5 + TILE_SIZE 
 
         spawn_x = TILE_SIZE * 13.5 + TILE_SIZE // 2
         spawn_y = TILE_SIZE * 17.5  # original spawn room row
         self.inky.center_x = spawn_x - (TILE_SIZE + 15)
-        self.inky.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.inky.center_y = spawn_y + TILE_SIZE  
         self.pinky.center_x = spawn_x
-        self.pinky.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.pinky.center_y = spawn_y + TILE_SIZE  
         self.clyde.center_x = spawn_x + (TILE_SIZE + 15)
-        self.clyde.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.clyde.center_y = spawn_y + TILE_SIZE  
 
         # Record the spawn points so ghosts can return here when eaten
         self.blinky.spawn_point = (self.blinky.center_x, self.blinky.center_y)
         self.pinky.spawn_point = (self.pinky.center_x, self.pinky.center_y)
         self.inky.spawn_point = (self.inky.center_x, self.inky.center_y)
         self.clyde.spawn_point = (self.clyde.center_x, self.clyde.center_y)
+
+        self.blinky.set_mode("chase")
+        self.blinky_release_timestamp = time.time()
+        self.pinky.blinky_release_timestamp = self.blinky_release_timestamp
+        self.inky.blinky_release_timestamp = self.blinky_release_timestamp
+        self.clyde.blinky_release_timestamp = self.blinky_release_timestamp
 
         # Physics engines
         self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
@@ -406,7 +413,7 @@ class GameView(arcade.Window):
         # function to change the font not working
         score_text = str(self.player_sprite.score)
 
-        # If we are in the "start" pause phase (e.g., at level launch or immediately after a reset)
+        # If in the "start" pause phase (e.g., at level launch or immediately after a reset)
         if self.death_pause_phase in ("start", "post_reset"):
             # Use the saved spawn room coordinates
             if hasattr(self, "spawn_room_pos"):
@@ -489,6 +496,16 @@ class GameView(arcade.Window):
             self.player_sprite.change_x = -MOVEMENT_SPEED
         if self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
+        
+        # Save logical direction for ghost AI
+        if self.player_sprite.change_x > 0:
+            self.player_sprite.direction = (1, 0)
+        elif self.player_sprite.change_x < 0:
+            self.player_sprite.direction = (-1, 0)
+        elif self.player_sprite.change_y > 0:
+            self.player_sprite.direction = (0, 1)
+        elif self.player_sprite.change_y < 0:
+            self.player_sprite.direction = (0, -1)
 
     def on_update(self, delta_time=108):
         """
@@ -608,7 +625,8 @@ class GameView(arcade.Window):
                     break
 
         for ghost in self.ghosts:
-            ghost.update()
+            if ghost.released:
+                ghost.update()
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
@@ -617,9 +635,9 @@ class GameView(arcade.Window):
         if len(self.consumable_list) == 0:
             self.reset_level()
 
-        # closing conditions for the game
-        # if self.esc_pressed:
-        #     self.close()
+        # quick closing conditions for the game
+        if self.esc_pressed:
+            self.close()
         
 
     def on_key_press(self, key, key_modifiers):
@@ -629,7 +647,6 @@ class GameView(arcade.Window):
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
-        # TODO: change the direction pacman is facing based on key press
 
         self.update_curr_tile()
 
@@ -791,4 +808,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
