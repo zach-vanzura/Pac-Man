@@ -320,7 +320,7 @@ class GameView(arcade.Window):
 
         # initialize the static sprites at the bottom of the menu, the n-th life is the current player
         for i in range(self.lives):
-            life = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
+            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
             life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
             life.center_y = TILE_SIZE
             self.static_sprites.append(life)
