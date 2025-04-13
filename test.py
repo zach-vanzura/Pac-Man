@@ -245,7 +245,7 @@ class GameView(arcade.Window):
         self.player_sprite = None
         self.tile_sprite = None
         self.consumable_sprite = None
-        self.static_sprites = None # used for the fruit and the pacman at the bottom of the screen and the upcoming fruit
+        self.static_sprites = None # used for the eaten fruit and remaining lives
 
         # Track the current state of what key is pressed
         self.left_pressed = False

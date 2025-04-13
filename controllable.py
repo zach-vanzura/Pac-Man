@@ -9,14 +9,15 @@ Group Members:
     Alexa Witkin
 """
 
-import arcade
-from PIL import Image, ImageOps
 import math
 import os
-from pathlib import Path
-from test import TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar, can_move_tiles
-import time
 import random
+import time
+from test import (TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS,
+                  SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar, can_move_tiles)
+
+import arcade
+from PIL import Image
 
 UPDATES_PER_FRAME = 5
 
@@ -45,7 +46,11 @@ WAVE_SCHEDULE = [
 
 
 class Controllable(arcade.Sprite):
-    # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
+    """
+    The base class for all things controllable in Pacman. The base controllable object is the player
+    and then the ghosts
+    """
+
     def __init__(self, path_to_sprite, tile_size):
         self.cur_texture = 0
         self.cur_direction = 0  # start left facing
@@ -61,7 +66,7 @@ class Controllable(arcade.Sprite):
 
         self.original_size = Image.open(path_to_sprite).width
         self.scale_factor = tile_size / self.original_size
-        super().__init__(self.txtrs[self.cur_direction][self.cur_texture], 1.5 * self.scale_factor, hit_box_algorithm='Simple')
+        super().__init__(self.txtrs[self.cur_direction][self.cur_texture], 1.5 * self.scale_factor)
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
@@ -73,6 +78,10 @@ class Controllable(arcade.Sprite):
         self.change_y = 0
 
     def create_direction_textures(self):
+        """
+        Using the base textures, create the necessary textures for each animation direction
+        :return: None
+        """
         # start left facing
         self.load_directional_animation(rotation=2)
         # right facing, default frames
@@ -107,18 +116,12 @@ class Controllable(arcade.Sprite):
 
         if self.change_x < 0:
             self.cur_direction = TEXTURE_ORIENTATIONS['LEFT_FACING']
-
-            # TODO: change this to double-index the texture list
         elif self.change_x > 0:
             self.cur_direction = TEXTURE_ORIENTATIONS['RIGHT_FACING']
         elif self.change_y > 0:
             self.cur_direction = TEXTURE_ORIENTATIONS['UP_FACING']
         elif self.change_y < 0:
             self.cur_direction = TEXTURE_ORIENTATIONS['DOWN_FACING']
-
-        # no change in texture if no change in texture
-        # TODO: might need an else to continue animation going
-
 
         # sprites will wrap around the screen
         if self.left < 0:
@@ -147,7 +150,6 @@ class Controllable(arcade.Sprite):
     def is_aligned_to_tile(self):
         return (self.center_x - TILE_SIZE // 2) % TILE_SIZE == 0 and \
             (self.center_y - TILE_SIZE // 2) % TILE_SIZE == 0
-    
 
 class Ghost(Controllable):
     def __init__(self, image_path, ghost_type, player, tiles, blinky=None):
@@ -234,14 +236,14 @@ class Ghost(Controllable):
 
         if self.mode == 'frightened':
             return (random.randint(0, NUM_COLS - 1), random.randint(0, NUM_ROWS - 1))
-        
+
         elif self.mode == 'scatter':
             return self.scatter_targets[self.ghost_type]
-        
+
         elif self.mode == 'chase':
             if self.ghost_type == "Blinky":
                 return pacman_tile
-            
+
             elif self.ghost_type == "Pinky":
                 offset = {
                     (1, 0): (4, 0),
@@ -250,7 +252,7 @@ class Ghost(Controllable):
                     (0, -1): (0, -4)
                 }.get(self.player.direction, (0, 0))
                 return (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
-            
+
             elif self.ghost_type == "Inky" and self.blinky:
                 blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
                 offset = {
@@ -262,11 +264,10 @@ class Ghost(Controllable):
                 intermediate = (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
                 vector = (intermediate[0] - blinky_tile[0], intermediate[1] - blinky_tile[1])
                 return (blinky_tile[0] + vector[0], blinky_tile[1] + vector[1])
-            
             elif self.ghost_type == "Clyde":
-                distance = math.hypot(self.center_x - self.player.center_x, self.center_y - self.player.center_y)
+                distance = math.hypot(self.center_x - self.player.center_x,
+                                      self.center_y - self.player.center_y)
                 return pacman_tile if distance > TILE_SIZE * 8 else self.scatter_targets["Clyde"]
-        
         elif self.mode == 'eaten' and self.spawn_point:
             return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
 
@@ -313,7 +314,8 @@ class Ghost(Controllable):
                     return
 
         # Handle scatter mode and pathfinding
-        if self.mode == 'scatter' and (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px):
+        if self.mode == 'scatter' and (self.target_px is None or
+                                       (round(self.center_x), round(self.center_y)) == self.target_px):
             scatter_tile = self.scatter_targets[self.ghost_type]
             curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
             self.current_path = astar(curr_tile, scatter_tile, tile_textures)
