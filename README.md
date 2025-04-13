@@ -17,6 +17,7 @@
 - tile.py creates the tile objects that the map is composed of.
 - my_flask.py holds the python flask and is designed in index.html which is stored in the "templates" folder.
 - pacman_store.db holds the database where the player score are kept.
+- controllable.py contains the class declarations for the controllable objects (pacman and ghosts). This file contains most of the AI logic for the ghosts and the player movement logic and pac-man animation. 
 
 # Citations
 https://www.deviantart.com/darthbladerpegasus/art/Pac-Man-Arcade-Logo-959562739
