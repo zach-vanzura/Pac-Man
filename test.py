@@ -40,6 +40,7 @@ WINDOW_TITLE = "PAC-MAN"
 # Set player and ghost movement speed
 MOVEMENT_SPEED = 2
 GHOST_SPEED = 1
+FRIGHTENED_SPEED = 0.5
 
 # Define symbols
 class Symbols(Enum):

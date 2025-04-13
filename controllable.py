@@ -13,7 +13,7 @@ import arcade
 from PIL import Image, ImageOps
 import math
 from pathlib import Path
-from test import TILE_SIZE, GHOST_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar, can_move_tiles
+from test import TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar, can_move_tiles
 import time
 import random
 
@@ -330,11 +330,12 @@ class Ghost(Controllable):
                     # Do not return—allow normal update processing below.
             else:
                 # Not yet reached the target; move toward it using computed dx, dy.
+                speed = FRIGHTENED_SPEED if self.mode == 'frightened' else GHOST_SPEED
                 if abs(dx) > abs(dy):
-                    self.change_x = GHOST_SPEED if dx > 0 else -GHOST_SPEED
+                    self.change_x = speed if dx > 0 else -speed
                     self.change_y = 0
                 else:
-                    self.change_y = GHOST_SPEED if dy > 0 else -GHOST_SPEED
+                    self.change_y = speed if dy > 0 else -speed
                     self.change_x = 0
 
                 # Update position using the computed change values.
@@ -375,11 +376,12 @@ class Ghost(Controllable):
         if self.target_px:
             dx = self.target_px[0] - self.center_x
             dy = self.target_px[1] - self.center_y
+            speed = FRIGHTENED_SPEED if self.mode == 'frightened' else GHOST_SPEED
             if abs(dx) > abs(dy):
-                self.change_x = GHOST_SPEED if dx > 0 else -GHOST_SPEED
+                self.change_x = speed if dx > 0 else -speed
                 self.change_y = 0
             else:
-                self.change_y = GHOST_SPEED if dy > 0 else -GHOST_SPEED
+                self.change_y = speed if dy > 0 else -speed
                 self.change_x = 0
 
             if abs(dx) < GHOST_SPEED:
