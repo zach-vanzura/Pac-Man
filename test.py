@@ -48,7 +48,7 @@ MAX_TILES_PER_SECOND = 9.47 / 60
 
 MOVEMENT_SPEED = 0.8 * MAX_TILES_PER_SECOND * TILE_SIZE
 GHOST_SPEED = 0.75 * MAX_TILES_PER_SECOND * TILE_SIZE
-
+FRIGHTENED_SPEED = 0.5
 
 # Define symbols
 class Symbols(Enum):
@@ -219,17 +219,33 @@ class GameView(arcade.Window):
         arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
 
+        # music
+        self.intro_music = None
+        self.music_player = None
+        self.game_started = False
+        self.background_music = None
+        self.background_music_player = None
+
+        # chomp sound when eating pellet
+        self.last_chomp_time = 0
+        self.chomp_cooldown = 0.16
+        self.pellet_chomp_sound = arcade.Sound("sounds/pacman_chomp.wav")
+        self.powerup_sound = arcade.Sound("sounds/pacman_eatfruit.wav")
+        self.ghost_eaten_sound = arcade.Sound("sounds/pacman_eatghost.wav")
+        self.death_sound = arcade.Sound("sounds/pacman_death.wav")
+
         self.curr_row = None
         self.wall_collisions = None
         self.controllable_list = None
         self.tile_list = None
         self.consumable_list = None
         self.to_be_eaten = None
+        self.high_score = 0
 
         self.player_sprite = None
         self.tile_sprite = None
         self.consumable_sprite = None
-        self.static_sprites = None  # used for remaining lives and eaten fruit
+        self.static_sprites = None # used for the fruit and the pacman at the bottom of the screen and the upcoming fruit
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -273,6 +289,8 @@ class GameView(arcade.Window):
 
         self.physics_engine = None
 
+        self.first_render = True  # New flag to detect the first render
+
     # Set up the game
     # Initialize the game state, load resources, and set up the game window
     def setup(self):
@@ -283,20 +301,25 @@ class GameView(arcade.Window):
         self.to_be_eaten = arcade.SpriteList()
         self.static_sprites = arcade.SpriteList()
 
+        # background music
+        self.background_music = arcade.Sound("sounds/pacman_beginning.wav", streaming=True)
+        #self.background_music_player = self.background_music.play(loop=True)
+
         # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
         self.player_sprite.center_x = TILE_SIZE * 14  # 14 is the x midpoint in the grid
         self.player_sprite.center_y = TILE_SIZE * 9 + TILE_SIZE // 2
         self.lives = LIVES                         # Starting with 5 lives
-        self.death_pause_phase = "start"          # Will be one of: None, "death", "post_reset", "start"
-        self.death_pause_start = time.time()          # Timestamp when the current pause phase began
+        self.death_pause_phase = "start"           # Will be one of: None, "death", "post_reset", or "start"
+        self.death_pause_start = time.time()       # Timestamp when the current pause phase began
         self.DEATH_PAUSE_DURATION = PAUSE          # Duration for the death collision pause (in seconds)
         self.POST_RESET_PAUSE_DURATION = PAUSE     # Duration for the pause after resetting positions
-        self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)        
+        self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)
+        self.player_sprite.direction = (0, 0)
         self.controllable_list.append(self.player_sprite)
 
         # initialize the static sprites at the bottom of the menu, the n-th life is the current player
-        for i in range(self.lives - 1):
+        for i in range(self.lives):
             life = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
             life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
             life.center_y = TILE_SIZE
@@ -315,24 +338,37 @@ class GameView(arcade.Window):
         # Add ghosts to controllable list
         self.controllable_list.extend(self.ghosts)
 
+        # Ghost spawn room
+        spawn_x = TILE_SIZE * 13.5 + TILE_SIZE // 2
+        spawn_y = TILE_SIZE * 17.5  # original spawn room row
+
+        # Save the ghost spawn room position
+        self.spawn_room_pos = (spawn_x, spawn_y)
+
         # ghost spawn points
         self.blinky.center_x = TILE_SIZE * 13.5 + TILE_SIZE // 2  # middle of gate
-        self.blinky.center_y = TILE_SIZE * 20.5 + TILE_SIZE       # moved up by one tile
+        self.blinky.center_y = TILE_SIZE * 20.5 + TILE_SIZE
 
         spawn_x = TILE_SIZE * 13.5 + TILE_SIZE // 2
         spawn_y = TILE_SIZE * 17.5  # original spawn room row
         self.inky.center_x = spawn_x - (TILE_SIZE + 15)
-        self.inky.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.inky.center_y = spawn_y + TILE_SIZE
         self.pinky.center_x = spawn_x
-        self.pinky.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.pinky.center_y = spawn_y + TILE_SIZE
         self.clyde.center_x = spawn_x + (TILE_SIZE + 15)
-        self.clyde.center_y = spawn_y + TILE_SIZE  # moved up by one tile
+        self.clyde.center_y = spawn_y + TILE_SIZE
 
         # Record the spawn points so ghosts can return here when eaten
         self.blinky.spawn_point = (self.blinky.center_x, self.blinky.center_y)
         self.pinky.spawn_point = (self.pinky.center_x, self.pinky.center_y)
         self.inky.spawn_point = (self.inky.center_x, self.inky.center_y)
         self.clyde.spawn_point = (self.clyde.center_x, self.clyde.center_y)
+
+        self.blinky.set_mode("chase")
+        self.blinky_release_timestamp = time.time()
+        self.pinky.blinky_release_timestamp = self.blinky_release_timestamp
+        self.inky.blinky_release_timestamp = self.blinky_release_timestamp
+        self.clyde.blinky_release_timestamp = self.blinky_release_timestamp
 
         # Physics engines
         self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
@@ -388,11 +424,22 @@ class GameView(arcade.Window):
         cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
         con.commit()
 
+        # Fetch the highest score in the database
+        cur.execute("SELECT MAX(total_score) FROM Scoreboard;")
+        result = cur.fetchone()
+        self.high_score = result[0] if result and result[0] is not None else 0
+
         # Pause the game for 5 seconds at the start
         self.is_paused = True
         self.pause_timer = PAUSE
 
     def on_draw(self):
+
+        if self.first_render:
+            self.background_music_player = self.background_music.play(loop=True)
+            self.death_pause_start = time.time()  # Set the start time for the pause
+            self.first_render = False  # Set the flag to False after the first render
+
         self.clear()
         self.tile_list.draw()
         self.consumable_list.draw()
@@ -405,6 +452,25 @@ class GameView(arcade.Window):
 
         # function to change the font not working
         score_text = str(self.player_sprite.score)
+
+        # If in the "start" pause phase (e.g., at level launch or immediately after a reset)
+        if self.death_pause_phase in ("start", "post_reset"):
+            # Use the saved spawn room coordinates
+            if hasattr(self, "spawn_room_pos"):
+                spawn_x, spawn_y = self.spawn_room_pos
+                # Adjust the y value so that the text is drawn directly under the ghost room.
+                ready_y = spawn_y - TILE_SIZE // 2
+            else:
+                # Fallback (center of screen)
+                spawn_x = SCREEN_WIDTH // 2
+                ready_y = SCREEN_HEIGHT // 2
+
+            arcade.draw_text("READY!",
+                            spawn_x,
+                            ready_y - 40,
+                            arcade.color.YELLOW,
+                            16,
+                            anchor_x="center")
 
         arcade.draw_text(score_text,
                          20,
@@ -421,10 +487,25 @@ class GameView(arcade.Window):
                          16,
                          anchor_x="center",
                          font_name="PixeloidSans-Bold")
-        
+
+        arcade.draw_text(str(self.high_score),
+                         SCREEN_WIDTH // 2,
+                         SCREEN_HEIGHT - 50,
+                         arcade.color.WHITE,
+                         14,
+                         anchor_x="center",
+                         font_name=self.font_name)
 
         # window to submit initials
         if self.show_initials_screen:
+            # Draw the GAME OVER header above the initials box.
+            arcade.draw_text("GAME OVER",
+                            SCREEN_WIDTH // 2,
+                            SCREEN_HEIGHT // 2 + 100,  # adjust Y offset to position above the prompt box
+                            arcade.color.RED,
+                            20,
+                            anchor_x="center")
+
             self.initials_bg.draw()
             self.initials_border.draw()
 
@@ -462,6 +543,16 @@ class GameView(arcade.Window):
             self.player_sprite.change_x = -MOVEMENT_SPEED
         if self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
+
+        # Save logical direction for ghost AI
+        if self.player_sprite.change_x > 0:
+            self.player_sprite.direction = (1, 0)
+        elif self.player_sprite.change_x < 0:
+            self.player_sprite.direction = (-1, 0)
+        elif self.player_sprite.change_y > 0:
+            self.player_sprite.direction = (0, 1)
+        elif self.player_sprite.change_y < 0:
+            self.player_sprite.direction = (0, -1)
 
     def on_update(self, delta_time=60):
         """
@@ -543,8 +634,17 @@ class GameView(arcade.Window):
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
 
+                # play chomp noise
+                if isinstance(sprite, Pellet):
+                    current_time = time.time()
+                    if current_time - self.last_chomp_time >= self.chomp_cooldown:
+                        self.pellet_chomp_sound.play(speed=1.5)
+                        self.last_chomp_time = current_time
+
                 # Enter frightened mode if Energizer pellet
+                # also play noise
                 if isinstance(sprite, Energizer):
+                    self.powerup_sound.play()
                     for ghost in self.ghosts:
                         ghost.set_mode('frightened')
 
@@ -570,19 +670,24 @@ class GameView(arcade.Window):
                     ghost.set_mode('eaten')
                     ghost.score = 200   # Award points for eating the ghost.
                     self.player_sprite.score += ghost.score
+                    # Play ghost eaten sound
+                    self.ghost_eaten_sound.play()
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
-                    self.static_sprites.pop(0) # remove the first element, this way we can add the fruit to the end
+                    self.static_sprites.pop() # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
+                    # play death sound
+                    self.death_sound.play()
                     self.death_pause_phase = "death"
                     self.death_pause_start = time.time()
                     # Break out of the collision loop to avoid multiple detections.
                     break
 
         for ghost in self.ghosts:
-            ghost.update()
+            if ghost.released:
+                ghost.update()
 
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
@@ -591,25 +696,9 @@ class GameView(arcade.Window):
         if len(self.consumable_list) == 0:
             self.reset_level()
 
-        # closing conditions for the game
+        # quick closing conditions for the game
         if self.esc_pressed:
             self.close()
-
-            # Implement Database
-            playerId = input("Enter your name: ")
-            con = sqlite3.connect("pacman_score.db", isolation_level=None)
-            cur = con.cursor()
-            cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
-            count = cur.fetchone()
-
-            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
-            con.commit()
-
-            cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
-            con.commit()
-
-            cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
-            con.commit()
         
 
     def on_key_press(self, key, key_modifiers):
@@ -619,7 +708,11 @@ class GameView(arcade.Window):
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
-        # TODO: change the direction pacman is facing based on key press
+        if not self.game_started:
+            self.game_started = True
+            if self.background_music_player:
+                self.background_music_player.pause()
+            return
 
         self.update_curr_tile()
 
@@ -631,6 +724,21 @@ class GameView(arcade.Window):
             elif key == arcade.key.ENTER:
                 self.score_submitted = True
                 self.show_initials_screen = False
+                # Implement Database
+                playerId = self.initials
+                con = sqlite3.connect("pacman_score.db", isolation_level=None)
+                cur = con.cursor()
+                cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
+                count = cur.fetchone()
+
+                cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
+                con.commit()
+
+                cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
+                con.commit()
+
+                cur.execute(f'CREATE TABLE Leaderboard AS SELECT * FROM Scoreboard ORDER BY total_score DESC;')
+                con.commit()
                 self.close()
             return
 
@@ -704,10 +812,22 @@ class GameView(arcade.Window):
             ghost.path_index = 0
 
     def update_curr_tile(self):
+        """
+        Update the player's current tile and the adjacent tiles.
+        """
+        # Calculate the player's current row and column
         self.curr_row = NUM_ROWS - 1 - int(self.player_sprite.center_y // TILE_SIZE)
         self.curr_col = int(self.player_sprite.center_x // TILE_SIZE)
+
+        # Calculate the center of the current tile
         self.tile_center_y = int(self.player_sprite.center_y // TILE_SIZE) * TILE_SIZE + TILE_SIZE // 2
         self.tile_center_x = self.curr_col * TILE_SIZE + TILE_SIZE // 2
+
+        # Check the adjacent tiles
+        self.next_y_pos = in_bounds(self.curr_row - 1, self.curr_col)  # Tile above
+        self.next_y_neg = in_bounds(self.curr_row + 1, self.curr_col)  # Tile below
+        self.next_x_pos = in_bounds(self.curr_row, self.curr_col + 1)  # Tile to the right
+        self.next_x_neg = in_bounds(self.curr_row, self.curr_col - 1)  # Tile to the left
 
     def reset_level(self):
         """
@@ -740,6 +860,7 @@ class GameView(arcade.Window):
         self.death_pause_phase = "start"  # Reset the death pause phase to start
         self.death_pause_start = time.time()
 
+
 def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
@@ -754,4 +875,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
