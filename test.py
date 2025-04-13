@@ -158,7 +158,7 @@ tile_orientations = [
 ]
 
 # Define the tiles that can be moved through
-can_move_tiles = ['o', '.', '#', 'R', 'S', 'O', 'A', 'M', 'G', 'B', 'K']
+can_move_tiles = ['o', '.', '#', 'C', 'R', 'S', 'O', 'A', 'M', 'G', 'B', 'K']
 
 
 # Define heuristic function for A* algorithm
@@ -213,9 +213,10 @@ def in_bounds(row, col):
     :return: the character at the given row, col index if there is one
     """
 
-    if 0 <= row < NUM_ROWS and 0 <= col < NUM_COLS:
+    if 0 <= row < NUM_ROWS:
+        col = col % NUM_COLS  # wrap horizontally
         return tile_textures[row][col]
-    return None  # out-of-bounds, treat as wall
+    return None  # treat vertical OOB as wall
 
 
 # Main GameView class
@@ -635,7 +636,7 @@ class GameView(arcade.Window):
             self.player_sprite.center_y = self.tile_center_y + TILE_SIZE // 4
         if self.left_pressed and self.next_x_neg not in can_move_tiles:
             self.player_sprite.center_x = self.tile_center_x + TILE_SIZE // 4
-        if self.right_pressed and self.next_x_pos not in can_move_tiles and self.curr_col != NUM_COLS - 1:  # needed for tunnel
+        if self.right_pressed and self.next_x_pos not in can_move_tiles:  # needed for tunnel
             self.player_sprite.center_x = self.tile_center_x - TILE_SIZE // 4
 
         #self.physics_engine.update()
