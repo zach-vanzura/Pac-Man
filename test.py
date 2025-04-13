@@ -643,7 +643,6 @@ class GameView(arcade.Window):
         self.controllable_list.update(delta_time)
         self.player_sprite.update_animation()
 
-        #TODO: add all fruits to map
         # Go through the two lists to get each tile texture and orientation
         center_y = 9 * TILE_SIZE + TILE_SIZE // 2
         center_x = 12 * TILE_SIZE
