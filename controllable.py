@@ -17,8 +17,6 @@ from test import TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_C
 import time
 import random
 
-SCATTER_DURATION = 7
-CHASE_DURATION = 20
 FRIGHTENED_DURATION = 6
 
 """
@@ -31,6 +29,17 @@ TEXTURE_ORIENTATIONS = {
     "UP_FACING": 1,
     "DOWN_FACING": 2
 }
+
+WAVE_SCHEDULE = [
+    ("scatter", 7),
+    ("chase", 20),
+    ("scatter", 7),
+    ("chase", 20),
+    ("scatter", 5),
+    ("chase", 20),
+    ("scatter", 5),
+    ("chase", float("inf"))
+]
 
 
 class Controllable(arcade.Sprite):
@@ -118,93 +127,86 @@ class Ghost(Controllable):
         self.player = player
         self.tiles = tiles
         self.blinky = blinky
+
+        # Pathfinding variables
         self.current_path = []
         self.path_index = 0
         self.target_px = None
 
-        self.mode_timer = 0
+        # Ghost state variables
         self.mode = 'scatter'
-        self.last_mode_switch_time = time.time()
-        self.released = False
-        self.release_time = None
-        self.blinky_release_timestamp = None
-
         self.previous_mode = None
+        self.released = False
+        self.blinky_release_timestamp = None
         self.spawn_point = None
-        # Immediately set the default ghost texture to the right‐facing texture.
-        self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
-        self.original_texture = self.texture
-        self.frightened_texture = arcade.load_texture("images/scared.png")
-        self.eaten_texture = arcade.load_texture("images/deadeyes.png")
         self.spawn_waiting_start = None
 
+        # Textures
+        self.original_texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+        self.texture = self.original_texture
+        self.frightened_texture = arcade.load_texture("images/scared.png")
+        self.eaten_texture = arcade.load_texture("images/deadeyes.png")
+
+        # Scatter mode targets 
         self.scatter_targets = {
-            "Blinky": (NUM_COLS - 3, NUM_ROWS - 3),
-            "Pinky": (2, NUM_ROWS - 3),
-            "Inky": (NUM_COLS - 3, 1),
-            "Clyde": (2, 1)
+            "Blinky": (26, 29),
+            "Pinky": (1, 26),
+            "Inky": (22, 3),
+            "Clyde": (1, 3)
         }
-        
+
+        # Mode switch timing variables
+        self.mode_wave_index = 0
+        self.global_mode_start_time = time.time()
+        self.global_timer_paused_at = None
 
     def set_mode(self, new_mode):
-        old_mode = self.mode  # Capture the current mode before switching
-
         if new_mode == 'frightened':
-            # Record previous mode only if we are coming from a normal state.
-            if old_mode not in ('frightened', 'eaten'):
-                self.previous_mode = old_mode
+            if self.mode not in ('frightened', 'eaten'):
+                self.previous_mode = self.mode
             self.mode = 'frightened'
             self.texture = self.frightened_texture
             self.is_edible = True
+            self.global_timer_paused_at = time.time()
 
         elif new_mode == 'eaten':
-            # When switching to eaten, if coming from normal mode, record it.
-            if old_mode not in ('frightened', 'eaten'):
-                self.previous_mode = old_mode
+            if self.mode not in ('frightened', 'eaten'):
+                self.previous_mode = self.mode
             self.mode = 'eaten'
             self.texture = self.eaten_texture
             self.is_edible = False
             self.spawn_waiting_start = None
-            # Clear any movement target so a fresh path to spawn is computed.
             self.target_px = None
             self.current_path = []
             self.path_index = 0
 
         else:
-            # new_mode is either 'scatter' or 'chase'
             self.mode = new_mode
             self.texture = self.original_texture
             self.is_edible = False
+            self.global_timer_paused_at = None
+            self.current_path = []
+            self.path_index = 0
+            self.target_px = None
 
         self.last_mode_switch_time = time.time()
 
-    
     def can_move_to(self, dx, dy):
-        """
-        Check if the ghost can move to the tile in the given direction.
-        :param dx: Change in x direction (e.g., -1, 0, 1)
-        :param dy: Change in y direction (e.g., -1, 0, 1)
-        :return: True if the ghost can move to the tile, False otherwise
-        """
-        # Calculate the new position
         new_tile_x = int((self.center_x + dx * TILE_SIZE) // TILE_SIZE)
         new_tile_y = int((self.center_y + dy * TILE_SIZE) // TILE_SIZE)
 
         if 0 <= new_tile_x < NUM_COLS and 0 <= new_tile_y < NUM_ROWS:
-            # Flip Y for tile_textures
             texture = tile_textures[NUM_ROWS - 1 - new_tile_y][new_tile_x]
             return texture in can_move_tiles or texture == '_'
         return False
 
     def get_target_tile(self):
         pacman_tile = (self.player.center_x // TILE_SIZE, self.player.center_y // TILE_SIZE)
-        
+
         if self.mode == 'frightened':
-            # Randomly choose a tile in the maze
             return (random.randint(0, NUM_COLS - 1), random.randint(0, NUM_ROWS - 1))
         
         elif self.mode == 'scatter':
-            # Return the scatter target for this ghost
             return self.scatter_targets[self.ghost_type]
         
         elif self.mode == 'chase':
@@ -212,124 +214,123 @@ class Ghost(Controllable):
                 return pacman_tile
             
             elif self.ghost_type == "Pinky":
-                direction_map = {
+                offset = {
                     (1, 0): (4, 0),
                     (-1, 0): (-4, 0),
                     (0, 1): (0, 4),
                     (0, -1): (0, -4)
-                }
-                offset = direction_map.get(self.player.direction, (0, 0))
+                }.get(self.player.direction, (0, 0))
                 return (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
             
             elif self.ghost_type == "Inky" and self.blinky:
                 blinky_tile = (self.blinky.center_x // TILE_SIZE, self.blinky.center_y // TILE_SIZE)
-                direction_map = {
+                offset = {
                     (1, 0): (2, 0),
                     (-1, 0): (-2, 0),
                     (0, 1): (0, 2),
                     (0, -1): (0, -2)
-                }
-                offset = direction_map.get(self.player.direction, (0, 0))
-                intermediate_tile = (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
-                vector_x = intermediate_tile[0] - blinky_tile[0]
-                vector_y = intermediate_tile[1] - blinky_tile[1]
-                target_tile = (blinky_tile[0] + vector_x, blinky_tile[1] + vector_y)
-                return target_tile
+                }.get(self.player.direction, (0, 0))
+                intermediate = (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
+                vector = (intermediate[0] - blinky_tile[0], intermediate[1] - blinky_tile[1])
+                return (blinky_tile[0] + vector[0], blinky_tile[1] + vector[1])
             
             elif self.ghost_type == "Clyde":
                 distance = math.hypot(self.center_x - self.player.center_x, self.center_y - self.player.center_y)
-                return pacman_tile if distance > TILE_SIZE * 8 else (5, 5)
-
-            return pacman_tile
+                return pacman_tile if distance > TILE_SIZE * 8 else self.scatter_targets["Clyde"]
         
-        elif self.mode == 'eaten':
-            # Target the spawn room (convert spawn_point in pixel coordinates to tile coordinates)
-            if self.spawn_point:
-                return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
+        elif self.mode == 'eaten' and self.spawn_point:
+            return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
 
     def update(self, delta_time: float = 1 / 60):
-        current_time = time.time()
-        elapsed_time = current_time - self.last_mode_switch_time
+        now = time.time()
 
-        # Only perform automatic mode transitions if the ghost is not eaten.
-        if self.mode in ('scatter', 'chase', 'frightened'):
-            if self.mode == 'scatter' and elapsed_time > SCATTER_DURATION:
-                self.set_mode('chase')
-            elif self.mode == 'chase' and elapsed_time > CHASE_DURATION:
-                self.set_mode('scatter')
-            elif self.mode == 'frightened' and elapsed_time > FRIGHTENED_DURATION:
-                self.set_mode('scatter')
+        if self.mode in ('scatter', 'chase'):
+            if self.global_timer_paused_at:
+                self.global_mode_start_time += (now - self.global_timer_paused_at)
+                self.global_timer_paused_at = None
 
-        # Handle Ghost Release Conditions
+            elapsed = now - self.global_mode_start_time
+            if self.mode_wave_index < len(WAVE_SCHEDULE):
+                _, duration = WAVE_SCHEDULE[self.mode_wave_index]
+                if elapsed >= duration:
+                    self.mode_wave_index += 1
+                    if self.mode_wave_index < len(WAVE_SCHEDULE):
+                        new_mode, _ = WAVE_SCHEDULE[self.mode_wave_index]
+                        self.set_mode(new_mode)
+                        self.global_mode_start_time = now
+        
+        elif self.mode == 'frightened':
+            if now - self.last_mode_switch_time >= FRIGHTENED_DURATION:
+                self.set_mode(self.previous_mode if self.previous_mode else 'scatter')
+
+        # Handle release logic
         if not self.released:
             if self.ghost_type == "Blinky":
                 self.released = True
-
             elif self.ghost_type == "Pinky":
-                if self.blinky_release_timestamp and time.time() - self.blinky_release_timestamp > 3:
+                if self.blinky_release_timestamp and now - self.blinky_release_timestamp > 3:
                     self.released = True
                 else:
                     return
-
             elif self.ghost_type == "Inky":
-                pellets_eaten = self.player.score // 10
-                if pellets_eaten >= 30 and self.blinky:
+                if self.player.score // 10 >= 30 and self.blinky:
                     self.released = True
                 else:
                     return
-
             elif self.ghost_type == "Clyde":
-                pellets_eaten = self.player.score // 10
-                if pellets_eaten >= 60:
+                if self.player.score // 10 >= 60:
                     self.released = True
                 else:
                     return
 
-        # Handling for eaten mode: head to spawn using A*
-        if self.mode == 'eaten' and self.spawn_point is not None:
-            # Compute the current and spawn tiles
+        # Handle scatter mode and pathfinding
+        if self.mode == 'scatter' and (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px):
+            scatter_tile = self.scatter_targets[self.ghost_type]
+            curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
+            self.current_path = astar(curr_tile, scatter_tile, tile_textures)
+            self.path_index = 0
+            if self.current_path and self.path_index < len(self.current_path):
+                next_tile = self.current_path[self.path_index]
+                self.path_index += 1
+                self.target_px = (
+                    next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
+                    next_tile[1] * TILE_SIZE + TILE_SIZE // 2
+                )
+
+        # Handle eaten mode and returning to spawn
+        if self.mode == 'eaten' and self.spawn_point:
             curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
             spawn_tile = (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
-            
-            # If we don't have a target point or we reached the current target, recompute the path
             if self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px:
                 self.current_path = astar(curr_tile, spawn_tile, tile_textures)
                 self.path_index = 0
-                if self.current_path and self.path_index < len(self.current_path):
+                if self.current_path:
                     next_tile = self.current_path[self.path_index]
                     self.path_index += 1
                     self.target_px = (
                         next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
                         next_tile[1] * TILE_SIZE + TILE_SIZE // 2
                     )
-            
-            # Compute difference between current position and the target pixel from A*
+
             dx = self.target_px[0] - self.center_x
             dy = self.target_px[1] - self.center_y
-            threshold = 4  # pixels threshold to consider the ghost "at" spawn
-            
+            threshold = 4
+
             if abs(dx) < threshold and abs(dy) < threshold:
-                # Snap exactly to the spawn point (or target) once near enough.
                 self.center_x, self.center_y = self.target_px
-                if self.spawn_waiting_start is None:
-                    # Start waiting; freeze movement.
-                    self.spawn_waiting_start = current_time
+                if not self.spawn_waiting_start:
+                    self.spawn_waiting_start = now
                     return
-                elif current_time - self.spawn_waiting_start < 2:
-                    # Still waiting two seconds.
+                elif now - self.spawn_waiting_start < 2:
                     return
                 else:
-                    # After two seconds, revert to the previous mode.
-                    self.set_mode(self.previous_mode if self.previous_mode is not None else 'scatter')
+                    self.set_mode(self.previous_mode or 'scatter')
                     self.previous_mode = None
                     self.spawn_waiting_start = None
-                    # Clear stale path data so that normal pathfinding resumes.
                     self.target_px = None
                     self.current_path = []
                     self.path_index = 0
-                    # Do not return—allow normal update processing below.
             else:
-                # Not yet reached the target; move toward it using computed dx, dy.
                 speed = FRIGHTENED_SPEED if self.mode == 'frightened' else GHOST_SPEED
                 if abs(dx) > abs(dy):
                     self.change_x = speed if dx > 0 else -speed
@@ -338,7 +339,6 @@ class Ghost(Controllable):
                     self.change_y = speed if dy > 0 else -speed
                     self.change_x = 0
 
-                # Update position using the computed change values.
                 if abs(dx) < GHOST_SPEED:
                     self.center_x = self.target_px[0]
                 else:
@@ -348,21 +348,15 @@ class Ghost(Controllable):
                     self.center_y = self.target_px[1]
                 else:
                     self.center_y += self.change_y
-                return  # Skip executing the normal pathfinding code.
+                return
 
-
-        # Movement/pathfinding for non-eaten modes 
+        # Regular pathfinding (non-eaten)
         curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
         if self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px:
-            # Only calculate a new path if not in eaten mode.
             if self.mode != 'eaten':
-                goal_tile = self.get_target_tile()  # get_target_tile() returns a valid target tile.
-                if goal_tile is not None:
+                goal_tile = self.get_target_tile()
+                if goal_tile:
                     self.current_path = astar(curr_tile, goal_tile, tile_textures)
-                    self.path_index = 0
-                else:
-                    # Should not happen: safeguard.
-                    self.current_path = []
                     self.path_index = 0
             if self.current_path and self.path_index < len(self.current_path):
                 next_tile = self.current_path[self.path_index]
@@ -371,7 +365,13 @@ class Ghost(Controllable):
                     next_tile[0] * TILE_SIZE + TILE_SIZE // 2,
                     next_tile[1] * TILE_SIZE + TILE_SIZE // 2
                 )
-
+            else:
+                # A* failed or path ended prematurely: pick a nearby tile to avoid freezing
+                fallback_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
+                self.target_px = (
+                    fallback_tile[0] * TILE_SIZE + TILE_SIZE // 2,
+                    fallback_tile[1] * TILE_SIZE + TILE_SIZE // 2
+                )
 
         if self.target_px:
             dx = self.target_px[0] - self.center_x
