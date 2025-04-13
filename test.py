@@ -206,12 +206,20 @@ class GameView(arcade.Window):
         arcade.load_font("fonts/pixeloid_sans/PixeloidSans-Bold.ttf")
         self.font_name = "PixeloidSans-Bold"
 
+        # music
+        self.intro_music = None
+        self.music_player = None
+        self.game_started = False
+        self.background_music = None
+        self.background_music_player = None
+
         self.curr_row = None
         self.wall_collisions = None
         self.controllable_list = None
         self.tile_list = None
         self.consumable_list = None
         self.to_be_eaten = None
+        self.high_score = 0
 
         self.player_sprite = None
         self.tile_sprite = None
@@ -271,6 +279,10 @@ class GameView(arcade.Window):
         self.controllable_list = arcade.SpriteList()
         self.to_be_eaten = arcade.SpriteList()
         self.static_sprites = arcade.SpriteList()
+
+        # background music
+        self.background_music = arcade.Sound("sounds/pacman_beginning.wav", streaming=True)
+        self.background_music_player = self.background_music.play(loop=True)
 
         # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
@@ -391,6 +403,11 @@ class GameView(arcade.Window):
         cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
         con.commit()
 
+        # Fetch the highest score in the database
+        cur.execute("SELECT MAX(total_score) FROM Scoreboard;")
+        result = cur.fetchone()
+        self.high_score = result[0] if result and result[0] is not None else 0
+
         # Pause the game for 5 seconds at the start
         self.is_paused = True
         self.pause_timer = PAUSE
@@ -448,8 +465,15 @@ class GameView(arcade.Window):
                          16,
                          anchor_x="center",
                          font_name="PixeloidSans-Bold")
-        
-    
+
+        arcade.draw_text(str(self.high_score),
+                         SCREEN_WIDTH // 2,
+                         SCREEN_HEIGHT - 50,
+                         arcade.color.WHITE,
+                         14,
+                         anchor_x="center",
+                         font_name=self.font_name)
+
         # window to submit initials
         if self.show_initials_screen:
             # Draw the GAME OVER header above the initials box.
@@ -648,6 +672,11 @@ class GameView(arcade.Window):
         For a full list of keys, see:
         https://api.arcade.academy/en/latest/arcade.key.html
         """
+        if not self.game_started:
+            self.game_started = True
+            if self.background_music_player:
+                self.background_music_player.pause()
+            return
 
         self.update_curr_tile()
 
@@ -794,6 +823,7 @@ class GameView(arcade.Window):
 
         self.death_pause_phase = "start"  # Reset the death pause phase to start
         self.death_pause_start = time.time()
+
 
 def main():
     """ Main function """
