@@ -1,11 +1,9 @@
 # Imports
 import os.path
 
-import arcade
 from arcade import Text
 from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
 
-import consumables.strawberry
 from controllable import *
 from consumables import *
 from consumables.pellet_energizer import EnergizerPellet as Energizer
@@ -38,14 +36,26 @@ SCREEN_WIDTH = NUM_COLS * TILE_SIZE  # 28 columns
 WINDOW_TITLE = "PAC-MAN"
 
 # Set player and ghost movement speed
-MOVEMENT_SPEED = 2
-GHOST_SPEED = 1
+"""
+Pacman's max movement speed is ~75.75 pixels per second. With a base tile size of 8 pixels, This comes out to ~9.47 
+tiles per second. 
+
+Pacman starts moving at 80 % of his max speed, since we aren't really implementing level progression, 80% of pacman's 
+max speed is what we will base his movement off of.
+"""
+
+MAX_TILES_PER_SECOND = 9.47 / 60
+
+MOVEMENT_SPEED = 0.8 * MAX_TILES_PER_SECOND * TILE_SIZE
+GHOST_SPEED = 0.75 * MAX_TILES_PER_SECOND * TILE_SIZE
+
 
 # Define symbols
 class Symbols(Enum):
     PELLET = '.'
     ENERGIZER = 'o'
     EMPTY_SPACE = '#'
+
 
 PAUSE = 5
 LIVES = 5
@@ -134,9 +144,11 @@ tile_orientations = [
 # Define the tiles that can be moved through
 can_move_tiles = ['o', '.', '#']
 
+
 # Define heuristic function for A* algorithm
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
 
 # Define A* algorithm for Ghost pathfinding
 def astar(start, goal, grid):
@@ -151,7 +163,7 @@ def astar(start, goal, grid):
         if current == goal:
             break
 
-        for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             next_node = (current[0] + dx, current[1] + dy)
             if 0 <= next_node[0] < NUM_COLS and 0 <= next_node[1] < NUM_ROWS:
                 tile = tile_textures[NUM_ROWS - 1 - next_node[1]][next_node[0]]
@@ -176,6 +188,7 @@ def astar(start, goal, grid):
     path.reverse()
     return path
 
+
 # Define a function to check if a tile is within bounds
 def in_bounds(row, col):
     """
@@ -187,6 +200,7 @@ def in_bounds(row, col):
     if 0 <= row < NUM_ROWS and 0 <= col < NUM_COLS:
         return tile_textures[row][col]
     return None  # out-of-bounds, treat as wall
+
 
 # Main GameView class
 # This class is the main application window and handles the game logic
@@ -215,7 +229,7 @@ class GameView(arcade.Window):
         self.player_sprite = None
         self.tile_sprite = None
         self.consumable_sprite = None
-        self.static_sprites = None # used for the fruit and the pacmen at the bottom of the screen and the upcoming fruit
+        self.static_sprites = None  # used for remaining lives and eaten fruit
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -408,7 +422,7 @@ class GameView(arcade.Window):
                          anchor_x="center",
                          font_name="PixeloidSans-Bold")
         
-    
+
         # window to submit initials
         if self.show_initials_screen:
             self.initials_bg.draw()
@@ -449,7 +463,7 @@ class GameView(arcade.Window):
         if self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = MOVEMENT_SPEED
 
-    def on_update(self, delta_time=108):
+    def on_update(self, delta_time=60):
         """
         All the logic to move, and the game logic goes here.
         Normally, you'll call update() on the sprite lists that
@@ -709,11 +723,11 @@ class GameView(arcade.Window):
             for col in range(len(tile_textures[0])):  # iterate over x-axis
                 # Check the tile character for pellet or energizer.
                 if tile_textures[row][col] == Symbols.PELLET.value:
-                    consumable_sprite = Pellet(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    consumable_sprite = Pellet(TILE_SIZE)
                     consumable_sprite.center_x, consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(consumable_sprite)
                 elif tile_textures[row][col] == Symbols.ENERGIZER.value:
-                    consumable_sprite = Energizer(TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+                    consumable_sprite = Energizer(TILE_SIZE)
                     consumable_sprite.center_x, consumable_sprite.center_y = center_x, center_y
                     self.consumable_list.append(consumable_sprite)
                 center_x += TILE_SIZE

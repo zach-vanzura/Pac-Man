@@ -12,37 +12,44 @@ Group Members:
 import arcade
 from PIL import Image, ImageOps
 import math
+import os
 from pathlib import Path
 from test import TILE_SIZE, GHOST_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar
 import time
 import random
 
+UPDATES_PER_FRAME = 5
+
 SCATTER_DURATION = 7
 CHASE_DURATION = 20
 FRIGHTENED_DURATION = 6
 
-"""
-This is the super class for all things controllable in Pac Man: The Player, The Ghosts, **maybe** some walls, 
-"""
 
 TEXTURE_ORIENTATIONS = {
-    "LEFT_FACING": 3,
-    "RIGHT_FACING": 0,
-    "UP_FACING": 1,
-    "DOWN_FACING": 2
+    "LEFT_FACING": 0,
+    "RIGHT_FACING": 1,
+    "UP_FACING": 2,
+    "DOWN_FACING": 3
 }
 
 
 class Controllable(arcade.Sprite):
-    # TODO: It may be wise to add an is_player boolean but we could also just make the first controllable the player
     def __init__(self, path_to_sprite, tile_size):
+        self.cur_texture = 0
+        self.cur_direction = 0  # start left facing
+        self.default_frames = [
+            arcade.load_texture(os.path.join("images", "pacman-animated", "pac-open.png")),
+            arcade.load_texture(os.path.join("images", "pacman-animated", "pac-half.png")),
+            arcade.load_texture(os.path.join("images", "pacman-animated", "pac-closed.png")),
+            arcade.load_texture(os.path.join("images", "pacman-animated", "pac-half.png")),
+        ]
         self.txtrs = []
-        self.image = Image.open(path_to_sprite).convert('RGBA')
+        # default image used for
         self.create_direction_textures()
 
-        self.original_size = self.image.width
+        self.original_size = self.default_frames[0].width
         self.scale_factor = tile_size / self.original_size
-        super().__init__(self.txtr, 1.5 * self.scale_factor, hit_box_algorithm='Simple')
+        super().__init__(self.txtrs[self.cur_direction][self.cur_texture], 1.5 * self.scale_factor, hit_box_algorithm='Simple')
         self.window_width, self.window_height = tile_size * 28, tile_size * 36
         self.is_edible = False
         self.score = 0
@@ -54,21 +61,24 @@ class Controllable(arcade.Sprite):
         self.change_y = 0
 
     def create_direction_textures(self):
-        # right facing
-        self.txtr = arcade.Texture(self.image)
-        self.txtrs.append(self.txtr)
-        # up facing, rotation is anticlockwise
-        self.image_up = self.image.rotate(90)
-        self.txtr = arcade.Texture(self.image_up)
-        self.txtrs.append(self.txtr)
-        # down facing
-        self.image_down = self.image_up.rotate(180)
-        self.txtr = arcade.Texture(self.image_down)
-        self.txtrs.append(self.txtr)
-        # start left facing so left txtr is last so it is current at startup
-        self.image_left = self.image.rotate(180)
-        self.txtr = arcade.Texture(self.image_left)
-        self.txtrs.append(self.txtr)
+        # start left facing
+        self.load_directional_animation(rotation=2)
+        # right facing, default frames
+        self.txtrs.append(self.default_frames)
+        # up facing, 270 degree clockwise rotations
+        self.load_directional_animation(rotation=3)
+        # down facing, 90 degree clockwise
+        self.load_directional_animation(rotation=1)
+
+    def load_directional_animation(self, rotation: int):
+        """
+        rotate each frame based in a certain amount of 90 degree intervals
+        """
+        tmp_frames = []
+        for frame in self.default_frames:
+            tmp = frame.rotate_90(rotation)
+            tmp_frames.append(tmp)
+        self.txtrs.append(tmp_frames)
 
     def update(self, delta_time: float = 1 / 60):
         """ Move the Player Sprite """
@@ -84,16 +94,19 @@ class Controllable(arcade.Sprite):
         self.center_y += self.change_y
 
         if self.change_x < 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['LEFT_FACING']]
+
+            # TODO: change this to double-index the texture list
         elif self.change_x > 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
         elif self.change_y > 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
+            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['UP_FACING']]
         elif self.change_y < 0:
-            self.texture = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
-        else:
-            # don't change texture if no change in direction
-            self.texture = self.texture
+            self.cur_direction = self.txtrs[TEXTURE_ORIENTATIONS['DOWN_FACING']]
+
+        # no change in texture if no change in texture
+        # TODO: might need an else to continue animation going
+
 
         # sprites will wrap around the screen
         if self.left < 0:
@@ -105,6 +118,19 @@ class Controllable(arcade.Sprite):
             self.top = self.window_height - 1
         elif self.top > self.window_height - 1:
             self.bottom = 0
+
+
+    def update_animation(self, delta_time: float = 1 / 60):
+        self.cur_texture += 1
+        if self.cur_texture > 3 * UPDATES_PER_FRAME:  # eating animation is a sequence of 4 frames
+            self.cur_texture = 0
+
+        frame = self.cur_texture // UPDATES_PER_FRAME
+
+        self.texture = self.txtrs[self.cur_direction][frame]
+
+
+
 
     def is_aligned_to_tile(self):
         return (self.center_x - TILE_SIZE // 2) % TILE_SIZE == 0 and \
@@ -129,7 +155,7 @@ class Ghost(Controllable):
         self.previous_mode = None
         self.spawn_point = None
         # Immediately set the default ghost texture to the right‐facing texture.
-        self.texture = self.txtrs[TEXTURE_ORIENTATIONS['RIGHT_FACING']]
+        self.texture = arcade.load_texture(image_path)
         self.original_texture = self.texture
         self.frightened_texture = arcade.load_texture("images/scared.png")
         self.eaten_texture = arcade.load_texture("images/deadeyes.png")
