@@ -388,10 +388,10 @@ class GameView(arcade.Window):
         self.clyde.blinky_release_timestamp = self.blinky_release_timestamp
 
         # Physics engines
-        self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
-        self.ghost_physics_engines = [
-            arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
-        ]
+        # self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
+        # self.ghost_physics_engines = [
+        #     arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
+        # ]
 
         # Go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
@@ -617,9 +617,9 @@ class GameView(arcade.Window):
                     # Fall through to normal update processing
 
         # Update the physics engine
-        self.player_physics_engine.update()
-        for engine in self.ghost_physics_engines:
-            engine.update()
+        # self.player_physics_engine.update()
+        # for engine in self.ghost_physics_engines:
+        #     engine.update()
         
         # position checks before collision checks
 
@@ -697,6 +697,7 @@ class GameView(arcade.Window):
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
+                self.consumable_list.remove(sprite)
 
                 # play chomp noise
                 if isinstance(sprite, Pellet):
@@ -756,8 +757,9 @@ class GameView(arcade.Window):
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
 
-        
-        if len(self.consumable_list) == 0:
+       # Only count pellets and energizers
+        remaining_edibles = [s for s in self.consumable_list if isinstance(s, (Pellet, Energizer))]
+        if len(remaining_edibles) == 0:
             self.reset_level()
 
         # quick closing conditions for the game
