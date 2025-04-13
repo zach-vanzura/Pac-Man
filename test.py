@@ -6,6 +6,14 @@ from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
 
 from controllable import *
 from consumables import *
+from consumables.cherry import Cherry
+from consumables.strawberry import Strawberry
+from consumables.orange import Orange
+from consumables.apple import Apple
+from consumables.melon import Melon
+from consumables.galaxian import Galaxian
+from consumables.bell import Bell
+from consumables.key import Key
 from consumables.pellet_energizer import EnergizerPellet as Energizer
 from consumables.pellet_small import Pellet
 from tile import *
@@ -47,7 +55,7 @@ max speed is what we will base his movement off of.
 MAX_TILES_PER_SECOND = 9.47 / 60
 
 MOVEMENT_SPEED = 0.8 * MAX_TILES_PER_SECOND * TILE_SIZE
-GHOST_SPEED = 0.75 * MAX_TILES_PER_SECOND * TILE_SIZE
+GHOST_SPEED = 0.33 * MAX_TILES_PER_SECOND * TILE_SIZE
 FRIGHTENED_SPEED = 0.5
 
 # Define symbols
@@ -55,6 +63,14 @@ class Symbols(Enum):
     PELLET = '.'
     ENERGIZER = 'o'
     EMPTY_SPACE = '#'
+    CHERRY = 'R'
+    STRAWBERRY = 'S'
+    ORANGE = 'O'
+    APPLE = 'A'
+    MELON = 'M'
+    GALAXIAN = 'G'
+    BELL = 'B'
+    KEY = 'K'
 
 
 PAUSE = 5
@@ -142,7 +158,7 @@ tile_orientations = [
 ]
 
 # Define the tiles that can be moved through
-can_move_tiles = ['o', '.', '#']
+can_move_tiles = ['o', '.', '#', 'C', 'R', 'S', 'O', 'A', 'M', 'G', 'B', 'K']
 
 
 # Define heuristic function for A* algorithm
@@ -197,9 +213,10 @@ def in_bounds(row, col):
     :return: the character at the given row, col index if there is one
     """
 
-    if 0 <= row < NUM_ROWS and 0 <= col < NUM_COLS:
+    if 0 <= row < NUM_ROWS:
+        col = col % NUM_COLS  # wrap horizontally
         return tile_textures[row][col]
-    return None  # out-of-bounds, treat as wall
+    return None  # treat vertical OOB as wall
 
 
 # Main GameView class
@@ -371,10 +388,10 @@ class GameView(arcade.Window):
         self.clyde.blinky_release_timestamp = self.blinky_release_timestamp
 
         # Physics engines
-        self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
-        self.ghost_physics_engines = [
-            arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
-        ]
+        # self.player_physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.tile_list)
+        # self.ghost_physics_engines = [
+        #     arcade.PhysicsEngineSimple(ghost, self.tile_list) for ghost in self.ghosts
+        # ]
 
         # Go through the two lists to get each tile texture and orientation
         center_y = SCREEN_HEIGHT - TILE_SIZE // 2
@@ -418,10 +435,10 @@ class GameView(arcade.Window):
             center_y -= TILE_SIZE  # increment y position at each level
 
         # Implement Database
-        playerId = "1" # alter if additional player is added
+        player_id = "1" # alter if additional player is added
         con = sqlite3.connect("pacman_score.db", isolation_level=None)
         cur = con.cursor()
-        cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{playerId}");')
+        cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{player_id}");')
         con.commit()
 
         # Fetch the highest score in the database
@@ -600,9 +617,9 @@ class GameView(arcade.Window):
                     # Fall through to normal update processing
 
         # Update the physics engine
-        self.player_physics_engine.update()
-        for engine in self.ghost_physics_engines:
-            engine.update()
+        # self.player_physics_engine.update()
+        # for engine in self.ghost_physics_engines:
+        #     engine.update()
         
         # position checks before collision checks
 
@@ -619,12 +636,59 @@ class GameView(arcade.Window):
             self.player_sprite.center_y = self.tile_center_y + TILE_SIZE // 4
         if self.left_pressed and self.next_x_neg not in can_move_tiles:
             self.player_sprite.center_x = self.tile_center_x + TILE_SIZE // 4
-        if self.right_pressed and self.next_x_pos not in can_move_tiles and self.curr_col != NUM_COLS - 1:  # needed for tunnel
+        if self.right_pressed and self.next_x_pos not in can_move_tiles:  # needed for tunnel
             self.player_sprite.center_x = self.tile_center_x - TILE_SIZE // 4
 
         #self.physics_engine.update()
         self.controllable_list.update(delta_time)
         self.player_sprite.update_animation()
+
+        #TODO: add all fruits to map
+        # Go through the two lists to get each tile texture and orientation
+        center_y = SCREEN_HEIGHT - TILE_SIZE // 2
+        center_x = TILE_SIZE // 2  # reset x pos
+        print(current_time - self.death_pause_start)
+        if current_time - self.death_pause_start > 10 and tile_textures[20][10] != Symbols.CHERRY.value:
+            tile_textures[20][10] == Symbols.CHERRY.value
+            self.consumable_sprite = Cherry(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 30 and tile_textures[20][10] != Symbols.STRAWBERRY.value:
+            tile_textures[20][10] == Symbols.STRAWBERRY.value
+            self.consumable_sprite = Strawberry(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 50 and tile_textures[20][10] != Symbols.ORANGE.value:
+            tile_textures[20][10] == Symbols.ORANGE.value
+            self.consumable_sprite = Orange(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 70 and tile_textures[20][10] != Symbols.APPLE.value:
+            tile_textures[20][10] == Symbols.APPLE.value
+            self.consumable_sprite = Apple(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 100 and tile_textures[20][10] != Symbols.MELON.value:
+            tile_textures[20][10] == Symbols.MELON.value
+            self.consumable_sprite = Melon(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 130 and tile_textures[20][10] != Symbols.GALAXIAN.value:
+            tile_textures[20][10] == Symbols.GALAXIAN.value
+            self.consumable_sprite = Galaxian(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 160 and tile_textures[20][10] != Symbols.BELL.value:
+            tile_textures[20][10] == Symbols.BELL.value
+            self.consumable_sprite = Bell(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+        elif current_time - self.death_pause_start > 190 and tile_textures[20][10] != Symbols.KEY.value:
+            tile_textures[20][10] == Symbols.KEY.value
+            self.consumable_sprite = Key(TILE_SIZE)
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_list.append(self.consumable_sprite)
+
 
         # find all sprites that will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
@@ -633,6 +697,7 @@ class GameView(arcade.Window):
             if sprite.is_edible:
                 sprite.set_eaten()
                 self.player_sprite.score += sprite.score
+                self.consumable_list.remove(sprite)
 
                 # play chomp noise
                 if isinstance(sprite, Pellet):
@@ -652,10 +717,10 @@ class GameView(arcade.Window):
             print(self.player_sprite.score)
 
             # Implement Database
-            playerId = "1" # alter if additional player is added
+            player_id = "1" # alter if additional player is added
             con = sqlite3.connect("pacman_score.db", isolation_level=None)
             cur = con.cursor()
-            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{playerId}";')
+            cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{player_id}";')
             con.commit()
 
         # update the consumable sprites
@@ -692,8 +757,9 @@ class GameView(arcade.Window):
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
 
-        
-        if len(self.consumable_list) == 0:
+       # Only count pellets and energizers
+        remaining_edibles = [s for s in self.consumable_list if isinstance(s, (Pellet, Energizer))]
+        if len(remaining_edibles) == 0:
             self.reset_level()
 
         # quick closing conditions for the game
@@ -725,13 +791,13 @@ class GameView(arcade.Window):
                 self.score_submitted = True
                 self.show_initials_screen = False
                 # Implement Database
-                playerId = self.initials
+                player_id = self.initials
                 con = sqlite3.connect("pacman_score.db", isolation_level=None)
                 cur = con.cursor()
                 cur.execute(f'SELECT COUNT(player) FROM Scoreboard;')
                 count = cur.fetchone()
 
-                cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{playerId}" WHERE ROWID = "{count[0]}";')
+                cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}", player = "{player_id}" WHERE ROWID = "{count[0]}";')
                 con.commit()
 
                 cur.execute(f'DROP TABLE IF EXISTS Leaderboard;')
