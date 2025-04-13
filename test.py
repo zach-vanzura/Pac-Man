@@ -650,7 +650,7 @@ class GameView(arcade.Window):
         print(current_time - self.death_pause_start)
         if 10 < elasped_time < 11 and not any(isinstance(c, Cherry) for c in self.consumable_list):
             self.consumable_sprite = Cherry(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = TILE_SIZE * 14, TILE_SIZE * 15 + TILE_SIZE // 2
             self.consumable_list.append(self.consumable_sprite)
         elif 30 < elasped_time < 31 and not any(isinstance(c, Strawberry) for c in self.consumable_list):
             self.consumable_sprite = Strawberry(TILE_SIZE)
@@ -707,6 +707,8 @@ class GameView(arcade.Window):
 
                 elif isinstance(sprite, Cherry):
                     self.powerup_sound.play()
+                    sprite.center_x, sprite.center_y = TILE_SIZE * (NUM_COLS - 1), TILE_SIZE
+                    self.static_sprites.append(sprite)
 
                 elif isinstance(sprite, Strawberry):
                     self.powerup_sound.play()
