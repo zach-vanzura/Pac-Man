@@ -705,6 +705,30 @@ class GameView(arcade.Window):
                     for ghost in self.ghosts:
                         ghost.set_mode('frightened')
 
+                elif isinstance(sprite, Cherry):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Strawberry):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Orange):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Melon):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Apple):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Bell):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Key):
+                    self.powerup_sound.play()
+
+                elif isinstance(sprite, Galaxian):
+                    self.powerup_sound.play()
+
             # print the score
             print(self.player_sprite.score)
 
