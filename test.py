@@ -290,7 +290,7 @@ class GameView(arcade.Window):
 
         # background music
         self.background_music = arcade.Sound("sounds/pacman_beginning.wav", streaming=True)
-        self.background_music_player = self.background_music.play(loop=True)
+        #self.background_music_player = self.background_music.play(loop=True)
 
         # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-static.png'), TILE_SIZE)
@@ -423,6 +423,7 @@ class GameView(arcade.Window):
     def on_draw(self):
 
         if self.first_render:
+            self.background_music_player = self.background_music.play(loop=True)
             self.death_pause_start = time.time()  # Set the start time for the pause
             self.first_render = False  # Set the flag to False after the first render
         
