@@ -938,6 +938,14 @@ class GameView(arcade.Window):
         # Reset positions for the player and all ghosts.
         self.reset()
 
+        # Update the life counter sprites to match the remaining lives.
+        self.static_sprites = arcade.SpriteList()
+        for i in range(self.lives):
+            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
+            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
+            life.center_y = TILE_SIZE
+            self.static_sprites.append(life)
+
         self.death_pause_phase = "start"  # Reset the death pause phase to start
         self.death_pause_start = time.time()
 
