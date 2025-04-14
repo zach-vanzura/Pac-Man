@@ -382,7 +382,7 @@ class GameView(arcade.Window):
         self.inky.spawn_point = (self.inky.center_x, self.inky.center_y)
         self.clyde.spawn_point = (self.clyde.center_x, self.clyde.center_y)
 
-        self.blinky.set_mode("chase")
+        self.blinky.set_mode("scatter")
         self.blinky_release_timestamp = time.time()
         self.pinky.blinky_release_timestamp = self.blinky_release_timestamp
         self.inky.blinky_release_timestamp = self.blinky_release_timestamp
@@ -876,8 +876,9 @@ class GameView(arcade.Window):
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
                 ghost.center_x, ghost.center_y = ghost.spawn_point
-            # Reset ghost mode to 'chase' (or your default) and clear path data.
-            ghost.set_mode('chase')
+            # Reset ghost mode based on the wave schedule
+            if ghost.mode != 'eaten':
+                ghost.set_mode('scatter' if ghost.mode_wave_index % 2 == 0 else 'chase')
             ghost.target_px = None
             ghost.current_path = []
             ghost.path_index = 0
@@ -927,6 +928,14 @@ class GameView(arcade.Window):
 
         # Reset positions for the player and all ghosts.
         self.reset()
+
+        # Update the life counter sprites to match the remaining lives.
+        self.static_sprites = arcade.SpriteList()
+        for i in range(self.lives):
+            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
+            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
+            life.center_y = TILE_SIZE
+            self.static_sprites.append(life)
 
         self.death_pause_phase = "start"  # Reset the death pause phase to start
         self.death_pause_start = time.time()
