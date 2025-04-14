@@ -335,13 +335,8 @@ class GameView(arcade.Window):
         self.player_initial_pos = (self.player_sprite.center_x, self.player_sprite.center_y)
         self.player_sprite.direction = (0, 0)
         self.controllable_list.append(self.player_sprite)
-
-        # initialize the static sprites at the bottom of the menu, the n-th life is the current player
-        for i in range(self.lives):
-            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
-            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
-            life.center_y = TILE_SIZE
-            self.static_sprites.append(life)
+        # Initialize the life counter sprites
+        self.update_life_counter()
 
         # Initialize the Ghosts sprites
         self.blinky = Ghost("images/blinky.png", "Blinky", self.player_sprite, self.tile_list)
@@ -748,10 +743,10 @@ class GameView(arcade.Window):
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
-                    self.static_sprites.pop(0)  # remove the first element, this way we can add the fruit to the end
+                    self.update_life_counter()  # Update the life counter sprites
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
-                    # play death sound
+                    # Play death sound
                     self.death_sound.play()
                     self.death_pause_phase = "death"
                     self.death_pause_start = time.time()
@@ -857,6 +852,19 @@ class GameView(arcade.Window):
                 # the next horizontal key isn't a pellet or empty space
                 self.buffered_key = key
 
+    def update_life_counter(self):
+        """
+        Update the life counter sprites to match the current number of lives.
+        """
+        # Clear the current life counter sprites
+        self.static_sprites = arcade.SpriteList()
+
+        # Add a sprite for each remaining life
+        for i in range(self.lives):
+            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
+            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # Position each life sprite
+            life.center_y = TILE_SIZE
+            self.static_sprites.append(life)
 
     # method to type initials
     def on_text(self, text):
@@ -930,12 +938,7 @@ class GameView(arcade.Window):
         self.reset()
 
         # Update the life counter sprites to match the remaining lives.
-        self.static_sprites = arcade.SpriteList()
-        for i in range(self.lives):
-            life = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
-            life.center_x = TILE_SIZE + (2 * i * TILE_SIZE)  # move each static over to the right by two tiles
-            life.center_y = TILE_SIZE
-            self.static_sprites.append(life)
+        self.update_life_counter()
 
         self.death_pause_phase = "start"  # Reset the death pause phase to start
         self.death_pause_start = time.time()
