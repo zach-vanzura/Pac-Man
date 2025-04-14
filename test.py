@@ -740,7 +740,7 @@ class GameView(arcade.Window):
                     self.static_sprites.pop(0)  # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
-                    # play death sound
+                    # Play death sound
                     self.death_sound.play()
                     self.death_pause_phase = "death"
                     self.death_pause_start = time.time()
@@ -845,6 +845,7 @@ class GameView(arcade.Window):
                 # the next horizontal key isn't a pellet or empty space
                 self.buffered_key = key
 
+
     # method to type initials
     def on_text(self, text):
         if self.show_initials_screen and not self.score_submitted:
@@ -858,6 +859,7 @@ class GameView(arcade.Window):
         """
         # Reset Pac-Man's position using a stored initial position.
         self.player_sprite.center_x, self.player_sprite.center_y = self.player_initial_pos
+        
         # Reset ghosts: iterate through each ghost and reset their positions and mode.
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
