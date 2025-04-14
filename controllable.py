@@ -13,7 +13,7 @@ import math
 import os
 import random
 import time
-from test import (TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS,
+from pacman import (TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS,
                   tile_textures, astar, can_move_tiles)
 
 import arcade

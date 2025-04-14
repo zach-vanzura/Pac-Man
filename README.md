@@ -10,9 +10,10 @@
 
 # How to run our program: 
 - Run my_flask.py. From there you can click the "play" button within the webpage which will allow you to play the game.
+- Or, clone the repo, making sure you have all the necessary packages, and run `$ python3 pacman.py` from the command line in the directory that contains all the necessary files.
 
 # Overview of "final-spring-start-point":
-- test.py contains the logic of the game and brings all the individual pieces (pacman, ghosts, pellets, tiles, fruit, etc.) together. 
+- pacman.py contains the logic of the game and brings all the individual pieces (pacman, ghosts, pellets, tiles, fruit, etc.) together. 
 - tile.py creates the tile objects that the map is composed of.
 - my_flask.py holds the python flask and is designed in index.html which is stored in the "templates" folder.
 - pacman_store.db holds the database where the player score are kept.
@@ -21,6 +22,7 @@
 
 # Citations
 https://www.deviantart.com/darthbladerpegasus/art/Pac-Man-Arcade-Logo-959562739
+https://www.deviantart.com/ammarzakwan-md/art/Pac-Man-LED-Pixel-Panel-Costume-Sprite-910004395
 https://pacman.fandom.com/wiki/Pac-Man
 https://tvtropes.org/pmwiki/pmwiki.php/Characters/PacMan
 https://ksagar.com/?k=249672015

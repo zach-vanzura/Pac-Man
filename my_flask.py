@@ -35,7 +35,7 @@ def index():
 @app.route("/play")
 def play():
     # Launch the Pac-Man game as a separate process
-    subprocess.Popen(["python", "test.py"])
+    subprocess.Popen(["python", "pacman.py"])
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
