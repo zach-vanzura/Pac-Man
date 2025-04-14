@@ -859,17 +859,23 @@ class GameView(arcade.Window):
         """
         # Reset Pac-Man's position using a stored initial position.
         self.player_sprite.center_x, self.player_sprite.center_y = self.player_initial_pos
-        
+
         # Reset ghosts: iterate through each ghost and reset their positions and mode.
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
                 ghost.center_x, ghost.center_y = ghost.spawn_point
-            # Reset ghost mode based on the wave schedule
-            if ghost.mode != 'eaten':
-                ghost.set_mode('scatter' if ghost.mode_wave_index % 2 == 0 else 'chase')
+
+            # Reset ghost mode to "scatter" or "chase" based on the wave schedule.
+            if ghost.mode_wave_index % 2 == 0:
+                ghost.set_mode('scatter')
+            else:
+                ghost.set_mode('chase')
+
+            # Clear pathfinding data to ensure fresh calculations.
             ghost.target_px = None
             ghost.current_path = []
             ghost.path_index = 0
+            ghost.released = False  # Reset release state for ghosts that start in the spawn box.
 
     def update_curr_tile(self):
         """
