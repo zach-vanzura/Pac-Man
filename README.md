@@ -10,7 +10,7 @@
 - The game ends when the player either run out of lives or when the "esc" button is pushed, which will exit the game and prompt the player to input their initials and their score will be saved.
 
 # How to run our program: 
-- Run my_flask.py. From there you can click the "play" button which will allow you to play the game.
+- Run my_flask.py. From there you can click the "play" button within the webpage which will allow you to play the game.
 
 # Overview of "final-spring-start-point":
 - test.py contains the logic of the game and brings all the individual pieces (pacman, ghosts, pellets, tiles, fruit, etc.) together.
@@ -18,9 +18,12 @@
 - my_flask.py holds the python flask and is designed in index.html which is stored in the "templates" folder.
 - pacman_store.db holds the database where the player score are kept.
 - controllable.py contains the class declarations for the controllable objects (pacman and ghosts). This file contains most of the AI logic for the ghosts and the player movement logic and pac-man animation. 
+- consumable.py contains the class declarations for the consumable objects (pellets and fruit). This file contains the logic for the pellets and fruit.
 
 # Citations
 https://www.deviantart.com/darthbladerpegasus/art/Pac-Man-Arcade-Logo-959562739
 https://pacman.fandom.com/wiki/Pac-Man
 https://tvtropes.org/pmwiki/pmwiki.php/Characters/PacMan
 https://ksagar.com/?k=249672015
+https://www.pngall.com/pacman-ghost-png/download/172942/ (adjusted colors for other ghosts)
+
