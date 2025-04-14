@@ -1,14 +1,14 @@
 """
-This is the base tile class that is used to determine the tile texture and the tile orientation for each tile in the
-grid.
-Each tile in an extension of the sprite arcade class which allows us to determine create walls that pacman can't pass
-through
+This is the base tile class that is used to determine the tile texture
+orientation for each tile in the grid.
+Each tile in an extension of the sprite arcade class which allows us to
+determine how to create walls that pacman can't pass through
 """
 
-import arcade
 from enum import Enum
-from PIL import Image, ImageOps
 import os
+import arcade
+from PIL import Image, ImageOps
 
 TEXTURES = {
     '|': 'single_wall.png',
@@ -25,6 +25,10 @@ TEXTURES = {
 
 
 class Orientations(Enum):
+    """
+    Orientation constants used to determine how to manipulate the texture
+    """
+
     ROTATE = 'T'
     ROTATE_AND_FLIP = 'Y'
 
@@ -37,16 +41,16 @@ class Orientations(Enum):
 
 def orient_image(image: str, operator: str) -> str:
     """
-    This is a helper function that... orients the image and saves it if need be.
-    after running it the first time, it is essentially just a checker to make sure that the necessary image for the tile
-    exists and will create it if it doesn't
+    This is a helper function that orients the image and saves it if need be.
+    After running it the first time, it is essentially just a checker to make sure
+    the necessary image for the tile exists and will create it if it doesn't.
     :param image: the path to either the base image or the manipulated image
     :param operator: the manipulation to perform
     :return: the path to the manipulated image.
     """
 
-    test_path = image[:-4] + '_' + operator + '.png'  # remove '.png', add the orientation operator and re-add '.png'
-    if os.path.exists(test_path):  # remove the'.png' from the textures string
+    test_path = image[:-4] + '_' + operator + '.png'
+    if os.path.exists(test_path):
         return test_path
 
     im = Image.open(image)
@@ -71,18 +75,18 @@ def orient_image(image: str, operator: str) -> str:
 
 
 class Tile(arcade.Sprite):
+    """
+    creates a tile object that extends the sprite class in arcade.
+    This class is used to simplify the maze-making process by dissecting the maze
+    into evenly sized tiles. There are ~8 unique tile types in the classic pac man maze
+    which allows for a lot of abstraction in the creation process but requires
+    specification of each tile's orientation.
+    :param center_x: the center x position of the tile
+    :param center_y: the center y position of the tile
+    :param texture: a character that is used to determine which wall should be created
+    :param orientation: a character that is used to determine how to manipulate the wall
+    """
     def __init__(self, tile_size, center_x, center_y, texture: str, orientation: str):
-        """
-        creates a tile object that extends the sprite class in arcade. This class is used to simplify the maze-making
-        process by dissecting the maze into evenly sized tiles. There are ~8 unique tile types in the classic pac man
-        maze which allows for a lot of abstraction in the creation process but requires specification of each tile's
-        orientation.
-        :param center_x: the center x position of the tile
-        :param center_y: the center y position of the tile
-        :param texture: a character that is used to determine which image to use for the sprite created
-        :param orientation: a character that is used to determine how to manipulate the image's orientation
-        """
-
         self.image = None
         self.image_path = os.path.join('images', 'tiles', TEXTURES[texture])
         self.original_size = 768  # original scale of the image
@@ -95,4 +99,5 @@ class Tile(arcade.Sprite):
         else:
             self.image = self.image_path
 
-        super().__init__(self.image, self.scale_factor, center_x, center_y, hit_box_alorithm='Detailed')
+        super().__init__(self.image, self.scale_factor, center_x, center_y,
+                         hit_box_alorithm='Detailed')
