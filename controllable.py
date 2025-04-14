@@ -212,6 +212,9 @@ class Ghost(Controllable):
             self.path_index = 0
 
         else:
+            # Ensure the mode is set based on the wave schedule or game state
+            if new_mode not in ('scatter', 'chase'):
+                new_mode = 'scatter'  # Default to scatter if an invalid mode is passed
             self.mode = new_mode
             if new_mode != 'eaten':  # Only restore texture if not still eaten
                 self.texture = self.original_texture
@@ -265,10 +268,12 @@ class Ghost(Controllable):
                 intermediate = (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
                 vector = (intermediate[0] - blinky_tile[0], intermediate[1] - blinky_tile[1])
                 return (blinky_tile[0] + vector[0], blinky_tile[1] + vector[1])
+            
             elif self.ghost_type == "Clyde":
                 distance = math.hypot(self.center_x - self.player.center_x,
                                       self.center_y - self.player.center_y)
                 return pacman_tile if distance > TILE_SIZE * 8 else self.scatter_targets["Clyde"]
+        
         elif self.mode == 'eaten' and self.spawn_point:
             return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
 
@@ -282,7 +287,7 @@ class Ghost(Controllable):
 
             elapsed = now - self.global_mode_start_time
             if self.mode_wave_index < len(WAVE_SCHEDULE):
-                _, duration = WAVE_SCHEDULE[self.mode_wave_index]
+                next_mode, duration = WAVE_SCHEDULE[self.mode_wave_index]
                 if elapsed >= duration:
                     self.mode_wave_index += 1
                     if self.mode_wave_index < len(WAVE_SCHEDULE):

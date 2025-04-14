@@ -886,8 +886,9 @@ class GameView(arcade.Window):
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
                 ghost.center_x, ghost.center_y = ghost.spawn_point
-            # Reset ghost mode to 'scatter' (or your default) and clear path data.
-            ghost.set_mode('scatter')
+            # Reset ghost mode based on the wave schedule
+            if ghost.mode != 'eaten':
+                ghost.set_mode('scatter' if ghost.mode_wave_index % 2 == 0 else 'chase')
             ghost.target_px = None
             ghost.current_path = []
             ghost.path_index = 0
