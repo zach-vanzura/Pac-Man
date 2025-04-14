@@ -14,7 +14,7 @@ import os
 import random
 import time
 from test import (TILE_SIZE, GHOST_SPEED, FRIGHTENED_SPEED, MOVEMENT_SPEED, NUM_COLS, NUM_ROWS,
-                  SCREEN_WIDTH, SCREEN_HEIGHT, tile_textures, astar, can_move_tiles)
+                  tile_textures, astar, can_move_tiles)
 
 import arcade
 from PIL import Image
@@ -144,16 +144,22 @@ class Controllable(arcade.Sprite):
 
         self.texture = self.txtrs[self.cur_direction][frame]
 
-
-
-
     def is_aligned_to_tile(self):
+        """
+        A checker function to check if an object is aligned with a tile
+        """
         return (self.center_x - TILE_SIZE // 2) % TILE_SIZE == 0 and \
             (self.center_y - TILE_SIZE // 2) % TILE_SIZE == 0
 
+
 class Ghost(Controllable):
+    """
+    Class for all things ghosts, which extends Controllable
+    """
     def __init__(self, image_path, ghost_type, player, tiles, blinky=None):
         super().__init__(image_path, TILE_SIZE)
+        self.last_mode_switch_time = None
+
         self.ghost_type = ghost_type
         self.player = player
         self.tiles = tiles
@@ -192,6 +198,10 @@ class Ghost(Controllable):
         self.global_timer_paused_at = None
 
     def set_mode(self, new_mode):
+        """
+        Sets the game state modes for a ghost
+        """
+
         if new_mode == 'frightened':
             if self.mode not in ('frightened', 'eaten'):
                 self.previous_mode = self.mode
@@ -227,6 +237,9 @@ class Ghost(Controllable):
         self.last_mode_switch_time = time.time()
 
     def can_move_to(self, dx, dy):
+        """
+        A method to verify if an object can move to another tile
+        """
         new_tile_x = int((self.center_x + dx * TILE_SIZE) // TILE_SIZE)
         new_tile_y = int((self.center_y + dy * TILE_SIZE) // TILE_SIZE)
 
@@ -236,6 +249,11 @@ class Ghost(Controllable):
         return False
 
     def get_target_tile(self):
+        """
+        Get the target tile of the ghosts based on different game states
+        :return:
+        """
+
         pacman_tile = (self.player.center_x // TILE_SIZE, self.player.center_y // TILE_SIZE)
 
         if self.mode == 'frightened':
@@ -268,12 +286,10 @@ class Ghost(Controllable):
                 intermediate = (pacman_tile[0] + offset[0], pacman_tile[1] + offset[1])
                 vector = (intermediate[0] - blinky_tile[0], intermediate[1] - blinky_tile[1])
                 return (blinky_tile[0] + vector[0], blinky_tile[1] + vector[1])
-            
             elif self.ghost_type == "Clyde":
                 distance = math.hypot(self.center_x - self.player.center_x,
                                       self.center_y - self.player.center_y)
                 return pacman_tile if distance > TILE_SIZE * 8 else self.scatter_targets["Clyde"]
-        
         elif self.mode == 'eaten' and self.spawn_point:
             return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
 
@@ -320,8 +336,8 @@ class Ghost(Controllable):
                     return
 
         # Handle scatter mode and pathfinding
-        if self.mode == 'scatter' and (self.target_px is None or
-                                       (round(self.center_x), round(self.center_y)) == self.target_px):
+        if (self.mode == 'scatter' and
+                (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px)):
             scatter_tile = self.scatter_targets[self.ghost_type]
             curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
             self.current_path = astar(curr_tile, scatter_tile, tile_textures)
@@ -337,8 +353,9 @@ class Ghost(Controllable):
         # Handle eaten mode and returning to spawn
         if self.mode == 'eaten' and self.spawn_point:
             curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
-            spawn_tile = (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
-            if self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px:
+            spawn_tile = (int(self.spawn_point[0] // TILE_SIZE),
+                          int(self.spawn_point[1] // TILE_SIZE))
+            if (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px):
                 self.current_path = astar(curr_tile, spawn_tile, tile_textures)
                 self.path_index = 0
                 if self.current_path:

@@ -1,25 +1,3 @@
-# Imports
-import os.path
-
-from arcade import Text
-from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
-
-from controllable import *
-from consumables import *
-from consumables.cherry import Cherry
-from consumables.strawberry import Strawberry
-from consumables.orange import Orange
-from consumables.apple import Apple
-from consumables.melon import Melon
-from consumables.galaxian import Galaxian
-from consumables.bell import Bell
-from consumables.key import Key
-from consumables.pellet_energizer import EnergizerPellet as Energizer
-from consumables.pellet_small import Pellet
-from tile import *
-import sqlite3
-import heapq
-
 
 """
 CS3050: Software Engineering
@@ -31,6 +9,27 @@ Group Members:
     Zach Vanzura
     Alexa Witkin
 """
+
+
+import os.path
+import sqlite3
+import heapq
+
+from arcade import Text
+from arcade.shape_list import create_rectangle_filled, create_rectangle_outline
+
+from controllable import *
+from consumables.cherry import Cherry
+from consumables.strawberry import Strawberry
+from consumables.orange import Orange
+from consumables.apple import Apple
+from consumables.melon import Melon
+from consumables.galaxian import Galaxian
+from consumables.bell import Bell
+from consumables.key import Key
+from consumables.pellet_energizer import EnergizerPellet as Energizer
+from consumables.pellet_small import Pellet
+from tile import *
 
 
 # Set tile size, window height and width
@@ -45,11 +44,11 @@ WINDOW_TITLE = "PAC-MAN"
 
 # Set player and ghost movement speed
 """
-Pacman's max movement speed is ~75.75 pixels per second. With a base tile size of 8 pixels, This comes out to ~9.47 
-tiles per second. 
+Pac man's max movement speed is ~75.75 pixels per second. 
+With a base tile size of 8 pixels, This comes out to ~9.47 tiles per second. 
 
-Pacman starts moving at 80 % of his max speed, since we aren't really implementing level progression, 80% of pacman's 
-max speed is what we will base his movement off of.
+Pacman starts moving at 80 % of his max speed, since we aren't really implementing 
+level progression, 80% of pac man's max speed is what we will base his movement off of.
 """
 
 MAX_TILES_PER_SECOND = 9.47 / 60
@@ -58,19 +57,16 @@ MOVEMENT_SPEED = 0.8 * MAX_TILES_PER_SECOND * TILE_SIZE
 GHOST_SPEED = 0.33 * MAX_TILES_PER_SECOND * TILE_SIZE
 FRIGHTENED_SPEED = 0.5
 
+
 # Define symbols
 class Symbols(Enum):
+    """
+    Defining symbols for mapping
+    """
+
     PELLET = '.'
     ENERGIZER = 'o'
     EMPTY_SPACE = '#'
-    CHERRY = 'R'
-    STRAWBERRY = 'S'
-    ORANGE = 'O'
-    APPLE = 'A'
-    MELON = 'M'
-    GALAXIAN = 'G'
-    BELL = 'B'
-    KEY = 'K'
 
 
 PAUSE = 5
@@ -163,11 +159,15 @@ can_move_tiles = ['o', '.', '#', 'C', 'R', 'S', 'O', 'A', 'M', 'G', 'B', 'K']
 
 # Define heuristic function for A* algorithm
 def heuristic(a, b):
+    """
+    define a heuristic for the A* algorithm
+    """
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 
 # Define A* algorithm for Ghost pathfinding
-def astar(start, goal, grid):
+def astar(start, goal):
+    """A* algorithm used for ghost """
     frontier = []
     heapq.heappush(frontier, (0, start))
     came_from = {start: None}
@@ -259,11 +259,12 @@ class GameView(arcade.Window):
         self.to_be_eaten = None
         self.num_fruit_eaten = 0
         self.high_score = 0
+        self.lives = 0
 
         self.player_sprite = None
         self.tile_sprite = None
         self.consumable_sprite = None
-        self.static_sprites = None # used for the eaten fruit and remaining lives
+        self.static_sprites = None  # used for the eaten fruit and remaining lives
 
         # Track the current state of what key is pressed
         self.left_pressed = False
@@ -312,6 +313,7 @@ class GameView(arcade.Window):
     # Set up the game
     # Initialize the game state, load resources, and set up the game window
     def setup(self):
+        """Set up the game's initial position, render mase"""
         # initialize lists
         self.tile_list = arcade.SpriteList(use_spatial_hash=True)
         self.consumable_list = arcade.SpriteList()
@@ -321,7 +323,7 @@ class GameView(arcade.Window):
 
         # background music
         self.background_music = arcade.Sound("sounds/pacman_beginning.wav", streaming=True)
-        #self.background_music_player = self.background_music.play(loop=True)
+        # self.background_music_player = self.background_music.play(loop=True)
 
         # Initialize the player sprite
         self.player_sprite = Controllable(os.path.join('images', 'pacman-animated', 'pac-open.png'), TILE_SIZE)
@@ -421,7 +423,7 @@ class GameView(arcade.Window):
                         self.logo_sprite.center_x = center_x
                         self.logo_sprite.center_y = center_y + 10
 
-                        # need hasattr or it won't work - adds it to sprite list
+                        # need hasattr, or it won't work - adds it to sprite list
                         if not hasattr(self, "logo_list"):
                             self.logo_list = arcade.SpriteList()
 
@@ -436,7 +438,7 @@ class GameView(arcade.Window):
             center_y -= TILE_SIZE  # increment y position at each level
 
         # Implement Database
-        player_id = "1" # alter if additional player is added
+        player_id = "1"  # alter if additional player is added
         con = sqlite3.connect("pacman_score.db", isolation_level=None)
         cur = con.cursor()
         cur.execute(f'INSERT INTO ScoreBoard (total_score,player) VALUES ("{self.player_sprite.score}", "{player_id}");')
@@ -484,11 +486,11 @@ class GameView(arcade.Window):
                 ready_y = SCREEN_HEIGHT // 2
 
             arcade.draw_text("READY!",
-                            spawn_x,
-                            ready_y - 40,
-                            arcade.color.YELLOW,
-                            16,
-                            anchor_x="center")
+                             spawn_x,
+                             ready_y - 40,
+                             arcade.color.YELLOW,
+                             16,
+                             anchor_x="center")
 
         arcade.draw_text(score_text,
                          20,
@@ -518,11 +520,11 @@ class GameView(arcade.Window):
         if self.show_initials_screen:
             # Draw the GAME OVER header above the initials box.
             arcade.draw_text("GAME OVER",
-                            SCREEN_WIDTH // 2,
-                            SCREEN_HEIGHT // 2 + 100,  # adjust Y offset to position above the prompt box
-                            arcade.color.RED,
-                            20,
-                            anchor_x="center")
+                             SCREEN_WIDTH // 2,
+                             SCREEN_HEIGHT // 2 + 100,  # adjust Y offset to position above the prompt box
+                             arcade.color.RED,
+                             20,
+                             anchor_x="center")
 
             self.initials_bg.draw()
             self.initials_border.draw()
@@ -549,6 +551,8 @@ class GameView(arcade.Window):
                              anchor_x="center")
 
     def update_player_speed(self):
+        """Method used to move th player"""
+
         # Calculate speed based on the keys pressed
         self.player_sprite.change_x = 0
         self.player_sprite.change_y = 0
@@ -582,17 +586,14 @@ class GameView(arcade.Window):
         # initials
         if self.show_initials_screen:
             return
-        
         if self.lives == 0:
             self.show_initials_screen = True
-        
         current_time = time.time()
-    
         # Handle pause phases
         if self.death_pause_phase is not None:
             if self.death_pause_phase == "start":
                 if current_time - self.death_pause_start < PAUSE:
-                    # During the start-of-level pause, do nothing (freeze frame)
+                    # During the start-of-level pause, do nothing (freeze-frame)
                     return
                 else:
                     # Start-of-level pause is over: resume normal gameplay
@@ -600,7 +601,7 @@ class GameView(arcade.Window):
                     return
             elif self.death_pause_phase == "death":
                 if current_time - self.death_pause_start < self.DEATH_PAUSE_DURATION:
-                    # During the initial death pause, do nothing (freeze frame)
+                    # During the initial death pause, do nothing (freeze-frame)
                     return
                 else:
                     # Death pause duration is over: Reset positions and start the post-reset pause
@@ -616,13 +617,6 @@ class GameView(arcade.Window):
                     # Post-reset pause is finished: resume normal game updates
                     self.death_pause_phase = None
                     # Fall through to normal update processing
-
-        # Update the physics engine
-        # self.player_physics_engine.update()
-        # for engine in self.ghost_physics_engines:
-        #     engine.update()
-        
-        # position checks before collision checks
 
         # check the next tile, up, down, left, or right is within bounds
         self.update_curr_tile()
@@ -640,13 +634,10 @@ class GameView(arcade.Window):
         if self.right_pressed and self.next_x_pos not in can_move_tiles:  # needed for tunnel
             self.player_sprite.center_x = self.tile_center_x - TILE_SIZE // 4
 
-        #self.physics_engine.update()
+        # self.physics_engine.update()
         self.controllable_list.update(delta_time)
         self.player_sprite.update_animation()
 
-        # Go through the two lists to get each tile texture and orientation
-        center_y = 9 * TILE_SIZE + TILE_SIZE // 2
-        center_x = 12 * TILE_SIZE
         elasped_time = current_time - self.death_pause_start
         print(current_time - self.death_pause_start)
         if 10 < elasped_time < 11 and not any(isinstance(c, Cherry) for c in self.consumable_list):
@@ -690,7 +681,6 @@ class GameView(arcade.Window):
                                                                                 TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
 
-
         # find all sprites that will collide with the pac man
         self.to_be_eaten = self.player_sprite.collides_with_list(self.consumable_list)
         for sprite in self.to_be_eaten:
@@ -715,7 +705,7 @@ class GameView(arcade.Window):
                         ghost.set_mode('frightened')
 
                 # sprite eaten is a fruit
-                if not (isinstance(sprite, Pellet) or isinstance(sprite, Ghost) or isinstance(sprite, Energizer)):
+                if not isinstance(sprite, (Pellet, Ghost, Energizer)):
                     self.powerup_sound.play()
                     sprite.center_x, sprite.center_y = TILE_SIZE * (NUM_COLS - 1 - 2 * self.num_fruit_eaten), TILE_SIZE
                     self.static_sprites.append(sprite)
@@ -734,7 +724,6 @@ class GameView(arcade.Window):
         # update the consumable sprites
         for sprite in self.consumable_list:
             sprite.update()
-        
         # Collision check with ghosts:
         if self.death_pause_phase is None:  # Only process collisions if not in a death pause.
             ghost_hit_list = self.player_sprite.collides_with_list(self.ghosts)
@@ -765,7 +754,7 @@ class GameView(arcade.Window):
         if self.buffered_key:
             self.on_key_press(self.buffered_key, key_modifiers=None)
 
-       # Only count pellets and energizers
+        # Only count pellets and energizers
         remaining_edibles = [s for s in self.consumable_list if isinstance(s, (Pellet, Energizer))]
         if len(remaining_edibles) == 0:
             self.reset_level()
@@ -773,7 +762,6 @@ class GameView(arcade.Window):
         # quick closing conditions for the game
         # if self.esc_pressed:
             # self.close()
-        
 
     def on_key_press(self, key, key_modifiers):
         """
@@ -857,7 +845,6 @@ class GameView(arcade.Window):
                 # the next horizontal key isn't a pellet or empty space
                 self.buffered_key = key
 
-
     # method to type initials
     def on_text(self, text):
         if self.show_initials_screen and not self.score_submitted:
@@ -871,7 +858,6 @@ class GameView(arcade.Window):
         """
         # Reset Pac-Man's position using a stored initial position.
         self.player_sprite.center_x, self.player_sprite.center_y = self.player_initial_pos
-        
         # Reset ghosts: iterate through each ghost and reset their positions and mode.
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
@@ -945,7 +931,7 @@ def main():
     """ Main function """
     # Create a window class. This is what actually shows up on screen
 
-    # Create and setup the GameView
+    # Create and set up the GameView
     game = GameView()
     game.setup()
 
