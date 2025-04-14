@@ -294,8 +294,12 @@ class Ghost(Controllable):
             return (int(self.spawn_point[0] // TILE_SIZE), int(self.spawn_point[1] // TILE_SIZE))
 
     def update(self, delta_time: float = 1 / 60):
+        """
+        Update the ghost's position and behavior based on its current mode.
+        """
         now = time.time()
 
+        # Handle mode switching
         if self.mode in ('scatter', 'chase'):
             if self.global_timer_paused_at:
                 self.global_mode_start_time += (now - self.global_timer_paused_at)
@@ -441,7 +445,7 @@ class Ghost(Controllable):
                     fallback_tile[1] * TILE_SIZE + TILE_SIZE // 2
                 )
 
-        if self.target_px:
+        if self.target_px is not None:
             dx = self.target_px[0] - self.center_x
             dy = self.target_px[1] - self.center_y
             speed = FRIGHTENED_SPEED if self.mode == 'frightened' else GHOST_SPEED
