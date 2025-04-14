@@ -381,7 +381,7 @@ class GameView(arcade.Window):
         self.inky.spawn_point = (self.inky.center_x, self.inky.center_y)
         self.clyde.spawn_point = (self.clyde.center_x, self.clyde.center_y)
 
-        self.blinky.set_mode("chase")
+        self.blinky.set_mode("scatter")
         self.blinky_release_timestamp = time.time()
         self.pinky.blinky_release_timestamp = self.blinky_release_timestamp
         self.inky.blinky_release_timestamp = self.blinky_release_timestamp
@@ -886,8 +886,8 @@ class GameView(arcade.Window):
         for ghost in self.ghosts:
             if ghost.spawn_point is not None:
                 ghost.center_x, ghost.center_y = ghost.spawn_point
-            # Reset ghost mode to 'chase' (or your default) and clear path data.
-            ghost.set_mode('chase')
+            # Reset ghost mode to 'scatter' (or your default) and clear path data.
+            ghost.set_mode('scatter')
             ghost.target_px = None
             ghost.current_path = []
             ghost.path_index = 0
