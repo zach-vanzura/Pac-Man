@@ -340,7 +340,7 @@ class Ghost(Controllable):
                 (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px)):
             scatter_tile = self.scatter_targets[self.ghost_type]
             curr_tile = (int(self.center_x // TILE_SIZE), int(self.center_y // TILE_SIZE))
-            self.current_path = astar(curr_tile, scatter_tile, tile_textures)
+            self.current_path = astar(curr_tile, scatter_tile)
             self.path_index = 0
             if self.current_path and self.path_index < len(self.current_path):
                 next_tile = self.current_path[self.path_index]
@@ -356,7 +356,7 @@ class Ghost(Controllable):
             spawn_tile = (int(self.spawn_point[0] // TILE_SIZE),
                           int(self.spawn_point[1] // TILE_SIZE))
             if (self.target_px is None or (round(self.center_x), round(self.center_y)) == self.target_px):
-                self.current_path = astar(curr_tile, spawn_tile, tile_textures)
+                self.current_path = astar(curr_tile, spawn_tile)
                 self.path_index = 0
                 if self.current_path:
                     next_tile = self.current_path[self.path_index]
@@ -424,7 +424,7 @@ class Ghost(Controllable):
             if self.mode != 'eaten':
                 goal_tile = self.get_target_tile()
                 if goal_tile:
-                    self.current_path = astar(curr_tile, goal_tile, tile_textures)
+                    self.current_path = astar(curr_tile, goal_tile)
                     self.path_index = 0
             if self.current_path and self.path_index < len(self.current_path):
                 next_tile = self.current_path[self.path_index]
