@@ -12,12 +12,11 @@ Group Members:
 import arcade
 from PIL import Image
 
-"""
-This is the super class for all things consumable in Pac Man: The Player and the Ghosts (technically), 
-Main this class focuses on the pellets, the energizers (the big pellets) and the fruit"""
-
-
 class Consumable(arcade.Sprite):
+    """
+    This is the super class for all things consumable in Pac-Man:
+    The Player and the Ghosts (technically),
+    this class focuses on the pellets, the energizers (the big pellets) and the fruit"""
     def __init__(self, path_to_sprite, tile_size):
         self.image = Image.open(path_to_sprite)
         self.original_size = self.image.width
@@ -34,4 +33,5 @@ class Consumable(arcade.Sprite):
             self.kill()
 
     def set_eaten(self):
+        """Sets a boolean to indicate that a consumable has been consumed"""
         self.is_eaten = True
