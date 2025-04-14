@@ -257,6 +257,7 @@ class GameView(arcade.Window):
         self.tile_list = None
         self.consumable_list = None
         self.to_be_eaten = None
+        self.num_fruit_eaten = 0
         self.high_score = 0
 
         self.player_sprite = None
@@ -650,35 +651,43 @@ class GameView(arcade.Window):
         print(current_time - self.death_pause_start)
         if 10 < elasped_time < 11 and not any(isinstance(c, Cherry) for c in self.consumable_list):
             self.consumable_sprite = Cherry(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = TILE_SIZE * 14, TILE_SIZE * 15 + TILE_SIZE // 2
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 30 < elasped_time < 31 and not any(isinstance(c, Strawberry) for c in self.consumable_list):
             self.consumable_sprite = Strawberry(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 50 < elasped_time < 51 and not any(isinstance(c, Orange) for c in self.consumable_list):
             self.consumable_sprite = Orange(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 70 < elasped_time < 71 and not any(isinstance(c, Apple) for c in self.consumable_list):
             self.consumable_sprite = Apple(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 100 < elasped_time < 101 and not any(isinstance(c, Melon) for c in self.consumable_list):
             self.consumable_sprite = Melon(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 130 < elasped_time < 131 and not any(isinstance(c, Galaxian) for c in self.consumable_list):
             self.consumable_sprite = Galaxian(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 160 < elasped_time < 161 and not any(isinstance(c, Bell) for c in self.consumable_list):
             self.consumable_sprite = Bell(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
         elif 200 < elasped_time < 201 and not any(isinstance(c, Key) for c in self.consumable_list):
             self.consumable_sprite = Key(TILE_SIZE)
-            self.consumable_sprite.center_x, self.consumable_sprite.center_y = center_x, center_y
+            self.consumable_sprite.center_x, self.consumable_sprite.center_y = (TILE_SIZE * 14,
+                                                                                TILE_SIZE * 15 + TILE_SIZE // 2)
             self.consumable_list.append(self.consumable_sprite)
 
 
@@ -705,37 +714,18 @@ class GameView(arcade.Window):
                     for ghost in self.ghosts:
                         ghost.set_mode('frightened')
 
-                elif isinstance(sprite, Cherry):
+                # sprite eaten is a fruit
+                if not (isinstance(sprite, Pellet) or isinstance(sprite, Ghost) or isinstance(sprite, Energizer)):
                     self.powerup_sound.play()
-                    sprite.center_x, sprite.center_y = TILE_SIZE * (NUM_COLS - 1), TILE_SIZE
+                    sprite.center_x, sprite.center_y = TILE_SIZE * (NUM_COLS - 1 - 2 * self.num_fruit_eaten), TILE_SIZE
                     self.static_sprites.append(sprite)
-
-                elif isinstance(sprite, Strawberry):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Orange):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Melon):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Apple):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Bell):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Key):
-                    self.powerup_sound.play()
-
-                elif isinstance(sprite, Galaxian):
-                    self.powerup_sound.play()
+                    self.num_fruit_eaten += 1
 
             # print the score
             print(self.player_sprite.score)
 
             # Implement Database
-            player_id = "1" # alter if additional player is added
+            player_id = "1"  # alter if additional player is added
             con = sqlite3.connect("pacman_score.db", isolation_level=None)
             cur = con.cursor()
             cur.execute(f'UPDATE Scoreboard SET total_score = "{self.player_sprite.score}" WHERE player = "{player_id}";')
@@ -745,7 +735,7 @@ class GameView(arcade.Window):
         for sprite in self.consumable_list:
             sprite.update()
         
-       # Collision check with ghosts:
+        # Collision check with ghosts:
         if self.death_pause_phase is None:  # Only process collisions if not in a death pause.
             ghost_hit_list = self.player_sprite.collides_with_list(self.ghosts)
             for ghost in ghost_hit_list:
@@ -758,7 +748,7 @@ class GameView(arcade.Window):
                 elif ghost.mode in ('chase', 'scatter'):
                     # Collision with an active (non-frightened) ghost: register a death.
                     self.lives -= 1
-                    self.static_sprites.pop() # remove the first element, this way we can add the fruit to the end
+                    self.static_sprites.pop(0)  # remove the first element, this way we can add the fruit to the end
                     print(f"Lives remaining: {self.lives}")
                     # Start the death pause cycle only if not already active.
                     # play death sound
